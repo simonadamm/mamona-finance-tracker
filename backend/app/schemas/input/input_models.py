@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from ..inside.budget_models import BudgetInput
 
 # ==========================
 # First User's inputs
@@ -10,7 +11,7 @@ class UserInfo(BaseModel):
 
 class MoneyFirstInput(BaseModel):
     user_id: str
-    current_budget: float
+    current_budget: list[BudgetInput]
     savings: float 
 
 # ==========================

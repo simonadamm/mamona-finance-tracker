@@ -28,8 +28,8 @@ class Users(Base):
     __table_args__ = (
         CheckConstraint(
             "currency ~ '^[A-Z]{3}$'",
-            name="ck_users_currency_format"
-        )
+            name="ck_users_currency_format",
+        ),
     )
 
 
@@ -59,6 +59,10 @@ class Budget(Base):
             "period IN ('monthly')",
             name="ck_budget_period",
         ),
+        CheckConstraint(
+            "currency ~ '^[A-Z]{3}$'",
+            name="ck_users_currency_format",
+        )
     )   
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -66,6 +70,8 @@ class Budget(Base):
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=False)
 
     amount = Column(Numeric(12, 2), nullable=False)
+    planned_amount = Column(Numeric(12, 2), nullable=True)
+    currency = Column(String(3), nullable=False)
     period = Column(String(20), nullable=False)   # e.g month
 
     start_date = Column(Date, nullable=False)
