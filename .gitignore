@@ -2,3 +2,6 @@ STRUCTURE.md
 STACK.md
 NOTES.md
 .env
+__pycache__/
+*.py[cod]
+.venv/

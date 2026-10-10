@@ -48,7 +48,7 @@ class Budget(Base):
     __tablename__ = 'budget'
     __table_args__ = (
         CheckConstraint(
-            "amount > 0 AND amount <> 'NaN'::numeric",
+            "planned_amount > 0 AND planned_amount <> 'NaN'::numeric",
             name="ck_budget_amount_positive",
         ),
         CheckConstraint(
@@ -69,14 +69,15 @@ class Budget(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=False)
 
-    amount = Column(Numeric(12, 2), nullable=False)
-    planned_amount = Column(Numeric(12, 2), nullable=True)
+    planned_amount = Column(Numeric(12, 2), nullable=False) # planned amount of money for specific category
     currency = Column(String(3), nullable=False)
     period = Column(String(20), nullable=False)   # e.g month
 
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=True)
+
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())
 
 # ==========================
 # TRANSACTIONS
@@ -137,20 +138,14 @@ class Transactions(Base):
 class Categories(Base):
     __tablename__ = 'categories'
     __table_args__ = (
-        CheckConstraint(
-            "type IN ('income', 'expense', 'transfer')",
-            name="ck_categories_type",
-        ),
         UniqueConstraint(
-            "type",
             "name",
-            name="uq_categories_type_name",
+            name="uq_categories_name",
         ),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String(100), nullable=False)
-    type = Column(String(20), nullable=False)    # income, expense, transfer
     icon = Column(String(100), nullable=True)    # maybe later as NICE TO HAVE
 
 # ==========================
@@ -179,6 +174,7 @@ class SavingGoals(Base):
 
     target_amount = Column(Numeric(12, 2), nullable=False)
     current_amount = Column(Numeric(12, 2), nullable=False, server_default=text("0"))
+    currency = Column(String(3), nullable=False)
 
     status = Column(String(20), nullable=False, server_default=text("'active'"))
 
@@ -212,8 +208,9 @@ class ReccuringPayments(Base):
 
     merchant_name = Column(String(255), nullable=True)
     amount = Column(Numeric(12, 2), nullable=False)
+    currency = Column(String(3), nullable=False)
 
-    frequency = Column(String(30), nullable=True)
+    frequency = Column(String(30), nullable=False)
     status = Column(String(20), nullable=False, server_default=text("'active'"))
 
     next_expected_date = Column(Date, nullable=True)
@@ -275,12 +272,13 @@ class Forecasts(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=False)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id"), nullable=True)
     model_version = Column(String(100), nullable=False)
 
     forecast_date = Column(Date, nullable=False)
 
     predicted_amount = Column(Numeric(12, 2), nullable=False)
+    currency = Column(String(3), nullable=False)
     lower_bound = Column(Numeric(12, 2), nullable=True)
     upper_bound = Column(Numeric(12, 2), nullable=True)
 

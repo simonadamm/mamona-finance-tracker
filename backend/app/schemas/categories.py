@@ -1,46 +1,53 @@
-CATEGORIES = {
+CATEGORIES = [
 # Income
-"Main Income":                  {"type": "income"},
-"Other Income":                 {"type": "income"},
-"Investment Returns":           {"type": "income"},
+"Main Income",
+"Investment Returns",
 
 # Transfers & Financial Movements
-"Savings & Investments":        {"type": "transfer"},
-"Debt & Loan Repayments":       {"type": "transfer"},
-"Internal Transfer":            {"type": "transfer"},
+"Savings & Investments",
+"Debt & Loan Repayments",
+"Internal Transfer",
 
 # Living & Housing
-"Housing":                      {"type": "expense"},
-"Utilities & Telecom":          {"type": "expense"},
-"Home Maintenance & Repairs":   {"type": "expense"},
-"Furnishings & Home Goods":     {"type": "expense"},
+"Housing",
+"Utilities & Telecom",
+"Home Maintenance & Repairs",
+"Furnishings & Home Goods",
 
 # Daily & Lifestyle Expenses
-"Groceries":                    {"type": "expense"},
-"Dining Out & Cafes":           {"type": "expense"},
-"Clothing & Accessories":       {"type": "expense"},
-"Personal Care & Beauty":       {"type": "expense"},
-"Pet Care":                     {"type": "expense"},
+"Groceries",
+"Dining Out & Cafes",
+"Clothing & Accessories",
+"Personal Care & Beauty",
+"Pet Care",
 
 # Leisure & Entertainment
-"Subscriptions & Streaming":    {"type": "expense"},
-"Entertainment & Events":       {"type": "expense"},
-"Hobbies":                      {"type": "expense"},
-"Fitness & Sports":             {"type": "expense"},
+"Subscriptions & Streaming",
+"Entertainment & Events",
+"Hobbies",
+"Fitness & Sports",
 
 # Health & Education
-"Health & Medical":             {"type": "expense"},
-"Education & Self-Development": {"type": "expense"},
+"Health & Medical",
+"Education & Self-Development",
 
 # Travel & Transportation
-"Local Transit & Commute":      {"type": "expense"},
-"Travel & Vacation":            {"type": "expense"},
-"Lodging & Hotels":             {"type": "expense"},
+"Local Transit & Commute",
+"Travel & Vacation",
+"Lodging & Hotels",
 
 # Tech, Finance & Obligations
-"Electronics & Tech":           {"type": "expense"},
-"Insurance":                    {"type": "expense"},
-"Taxes & Fees":                 {"type": "expense"},
-"Gifts & Donations":            {"type": "expense"},
-"Other":                        {"type": "expense"},
-}
+"Electronics & Tech",
+"Insurance",
+"Taxes & Fees",
+"Gifts & Donations",
+
+# Others
+"Other"
+]
+
+TYPES =[
+    "income",
+    "expense",
+    "transfer"
+]
