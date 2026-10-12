@@ -6,8 +6,15 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from backend.app.api.dependencies import get_current_user_id
-from backend.app.schemas.inside.transactions_models import TransactionRead
+from backend.app.schemas.inside.transactions_models import (
+    TransactionRead,
+    TransactionCreate
+)
 from backend.app.services.transactions import (
+
+    get_transaction,
+    create_transaction,
+
     get_transactions,
 
     get_transactions_by_month,
@@ -73,3 +80,24 @@ def list_transactions(
         year=year,
     )
 
+@router.post("", status_code=201)
+def add_transaction(
+    data: TransactionCreate,
+    user_id: Annotated[UUID, Depends(get_current_user_id)]
+) -> TransactionRead:
+
+    try:
+        transaction_id = create_transaction(
+            data=data,
+            user_id=user_id,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=422,
+            detail=str(error),
+        ) from error
+
+    return get_transaction(
+        transaction_id=transaction_id,
+        user_id=user_id
+    )

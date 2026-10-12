@@ -11,4 +11,5 @@ dependencies = [
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.4",
     "sqlalchemy>=2.1.4",
+    "typesafe-sdk>=0.7.4",
 ]
