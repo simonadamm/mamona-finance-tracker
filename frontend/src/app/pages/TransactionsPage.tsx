@@ -13,6 +13,12 @@ import TransactionFilters from '../../components/transactions/TransactionFilters
 import { getCategories } from '../../services/categories'
 import type { CategoryRead } from '../../types/category'
 import AddTransactionDialog from '../../components/transactions/AddTransactionDialog'
+import TransactionActionDialog from '../../components/transactions/TransactionActionDialog'
+
+interface TransactionAction {
+  mode: 'edit' | 'delete'
+  transaction: TransactionRead
+}
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionRead[]>([])
@@ -26,6 +32,8 @@ export default function TransactionsPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [transactionSaved, setTransactionSaved] = useState(false)
+  const [action, setAction] = useState<TransactionAction | null>(null)
+  const [actionMessage, setActionMessage] = useState<string | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -107,6 +115,7 @@ export default function TransactionsPage() {
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
+            setActionMessage(null)
             setTransactionSaved(false)
             setDialogOpen(true)
           }}
@@ -138,6 +147,35 @@ export default function TransactionsPage() {
           onCreated={() => {
             setDialogOpen(false)
             setTransactionSaved(true)
+            setReloadKey((value) => value + 1)
+          }}
+        />
+      )}
+
+      {actionMessage && (
+        <Alert
+          severity="success"
+          onClose={() => setActionMessage(null)}
+          sx={{ mb: 3 }}
+        >
+          {actionMessage}
+        </Alert>
+      )}
+
+      {action && (
+        <TransactionActionDialog
+          key={`${action.mode}-${action.transaction.id}`}
+          mode={action.mode}
+          transaction={action.transaction}
+          categories={categories}
+          onClose={() => setAction(null)}
+          onCompleted={() => {
+            setActionMessage(
+              action.mode === 'edit'
+                ? 'Transaction updated. The list respects your current filters.'
+                : 'Transaction deleted.',
+            )
+            setAction(null)
             setReloadKey((value) => value + 1)
           }}
         />
@@ -178,6 +216,16 @@ export default function TransactionsPage() {
           : <TransactionTable
               transactions={transactions}
               categories={categories}
+              onEdit={(transaction) => {
+                setActionMessage(null)
+                setTransactionSaved(false)
+                setAction({ mode: 'edit', transaction })
+              }}
+              onDelete={(transaction) => {
+                setActionMessage(null)
+                setTransactionSaved(false)
+                setAction({ mode: 'delete', transaction })
+              }}
             />
       )}
     </section>

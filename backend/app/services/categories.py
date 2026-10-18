@@ -4,6 +4,10 @@ from backend.app.db.db_engine import SessionLocal
 from backend.app.models.tables import Categories
 from backend.app.schemas.inside.categories_models import CategoryRead
 
+# =======================================
+# Get Categories
+# =======================================
+
 def get_categories() -> list[CategoryRead]:
     statement = select(Categories).order_by(Categories.name)
 

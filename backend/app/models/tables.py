@@ -30,6 +30,18 @@ class Users(Base):
             "currency ~ '^[A-Z]{3}$'",
             name="ck_users_currency_format",
         ),
+        CheckConstraint(
+            """
+            (opening_balance IS NULL AND opening_date IS NULL)
+            OR
+            (opening_balance IS NOT NULL AND opening_date IS NOT NULL)
+            """,
+            name="ck_users_opening_balance_configuration",
+        ),
+        CheckConstraint(
+            "opening_balance IS NULL OR opening_balance <> 'NaN'::numeric",
+            name="ck_users_opening_balance_valid",
+        ),
     )
 
 
@@ -37,6 +49,9 @@ class Users(Base):
     name = Column(String(100), nullable=False)
 
     currency = Column(String(3), nullable=False)
+
+    opening_balance = Column(Numeric(12, 2), nullable=True)
+    opening_date = Column(Date, nullable=True)
 
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())

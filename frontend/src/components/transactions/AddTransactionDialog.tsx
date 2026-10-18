@@ -152,7 +152,7 @@ export default function AddTransactionDialog({
             key={formVersion}
             categories={categories}
             initialValues={initialValues}
-            onCreated={onCreated}
+            onSaved={onCreated}
             onSavingChange={setSaving}
           />
         </Box>

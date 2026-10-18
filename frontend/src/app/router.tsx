@@ -4,6 +4,7 @@ import MainLayout from './layouts/MainLayout'
 import HomePage from './pages/HomePage'
 import TransactionsPage from './pages/TransactionsPage'
 import NotFoundPage from './pages/NotFoundPage'
+import AnalysePage from './pages/AnalysePage'
 
 export default function AppRouter() {
   return (
@@ -18,6 +19,7 @@ export default function AppRouter() {
             element={<TransactionsPage />}
           />
 
+          <Route path="analyse" element={<AnalysePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

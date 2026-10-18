@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography'
 
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
+import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined'
 
 const menuItems = [
   {
@@ -23,6 +24,11 @@ const menuItems = [
     label: 'Transakcje',
     path: '/transactions',
     icon: ReceiptLongOutlinedIcon,
+  },
+  {
+    label: 'Analyse',
+    path: '/analyse',
+    icon: BarChartOutlinedIcon,
   },
 ]
 

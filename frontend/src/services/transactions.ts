@@ -55,3 +55,20 @@ export function generateTransactionDraft(
     signal,
   })
 }
+
+export function updateTransaction(
+  transactionId: string,
+  data: TransactionCreate,
+): Promise<TransactionRead> {
+  return apiRequest<TransactionRead>(`/transactions/${transactionId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+}
+
+export function deleteTransaction(transactionId: string): Promise<void> {
+  return apiRequest<void>(`/transactions/${transactionId}`, {
+    method: 'DELETE',
+  })
+}

@@ -7,9 +7,10 @@ import Button from '@mui/material/Button'
 import MenuItem from '@mui/material/MenuItem'
 import TextField from '@mui/material/TextField'
 
-import { createTransaction } from '../../services/transactions'
+import { createTransaction, updateTransaction } from '../../services/transactions'
 import type { CategoryRead } from '../../types/category'
 import type {
+  TransactionCreate,
   TransactionFormValues,
   TransactionType,
 } from '../../types/transaction'
@@ -17,7 +18,8 @@ import type {
 interface TransactionFormProps {
   categories: CategoryRead[]
   initialValues?: TransactionFormValues
-  onCreated: () => void
+  transactionId?: string
+  onSaved: () => void
   onSavingChange?: (saving: boolean) => void
 }
 
@@ -42,7 +44,8 @@ function getEmptyForm(): TransactionFormValues {
 export default function TransactionForm({
   categories,
   initialValues,
-  onCreated,
+  transactionId,
+  onSaved,
   onSavingChange,
 }: TransactionFormProps) {
   const [form, setForm] = useState<TransactionFormValues>(
@@ -81,14 +84,20 @@ export default function TransactionForm({
     onSavingChange?.(true)
 
     try {
-      await createTransaction({
+      const data: TransactionCreate = {
         ...form,
         type,
         amount,
         currency: form.currency.trim().toUpperCase(),
         merchant_name: form.merchant_name?.trim() || null,
         description: form.description?.trim() || null,
-      })
+      }
+
+      if (transactionId) {
+        await updateTransaction(transactionId, data)
+      } else {
+        await createTransaction(data)
+      }
     } catch (error) {
       setError(
         error instanceof Error
@@ -102,7 +111,7 @@ export default function TransactionForm({
     }
 
     setForm(getEmptyForm())
-    onCreated()
+    onSaved()
   }
 
   return (
@@ -247,7 +256,7 @@ export default function TransactionForm({
         disabled={saving || categories.length === 0}
         sx={{ mt: 2 }}
       >
-        {saving ? 'Saving…' : 'Save transaction'}
+        {saving ? 'Saving…' : transactionId ? 'Save changes' : 'Save transaction'}
       </Button>
     </Box>
   )

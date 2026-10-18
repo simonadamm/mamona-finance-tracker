@@ -188,3 +188,56 @@ def get_transactions_by_year_and_category(user_id: UUID, year: int, category_id:
         year=year,
         category_id=category_id,
     )
+
+# ==========================
+# Transaction errors
+# ==========================
+class TransactionNotFoundError(LookupError):
+    pass
+
+# ==========================
+# Update Transaction
+# ==========================
+def update_transaction(transaction_id: UUID, data: TransactionCreate, user_id: UUID) -> TransactionRead:
+
+    with SessionLocal.begin() as session:
+        transaction = session.scalar(
+            select(Transactions).where(
+                Transactions.id == transaction_id,
+                Transactions.user_id == user_id,
+            )
+        )
+
+        if transaction is None:
+            raise TransactionNotFoundError("Transaction not found.")
+
+        if session.get(Categories, data.category_id) is None:
+            raise ValueError("Category doesn't exist.")
+
+        for field, value in data.model_dump().items():
+            setattr(transaction, field, value)
+
+        session.flush()
+        session.refresh(transaction)
+
+        result = TransactionRead.model_validate(transaction)
+
+    return result
+
+# ==========================
+# Delete Transaction
+# ==========================
+def delete_transaction(transaction_id: UUID, user_id: UUID) -> None:
+    
+    with SessionLocal.begin() as session:
+        transaction = session.scalar(
+            select(Transactions).where(
+                Transactions.id == transaction_id,
+                Transactions.user_id == user_id,
+            )
+        )
+
+        if transaction is None:
+            raise TransactionNotFoundError("Transaction not found.")
+
+        session.delete(transaction)

@@ -3,7 +3,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from backend.app.api.dependencies import get_current_user_id
 from backend.app.schemas.inside.transactions_models import (
@@ -21,7 +21,11 @@ from backend.app.services.transactions import (
     get_transactions_by_month_and_category,
 
     get_transactions_by_year,
-    get_transactions_by_year_and_category
+    get_transactions_by_year_and_category,
+
+    update_transaction,
+    delete_transaction,
+    TransactionNotFoundError
 )
 
 router = APIRouter(prefix="/transactions", tags=["Transactions"])
@@ -81,10 +85,7 @@ def list_transactions(
     )
 
 @router.post("", status_code=201)
-def add_transaction(
-    data: TransactionCreate,
-    user_id: Annotated[UUID, Depends(get_current_user_id)]
-) -> TransactionRead:
+def add_transaction(data: TransactionCreate, user_id: Annotated[UUID, Depends(get_current_user_id)]) -> TransactionRead:
 
     try:
         transaction_id = create_transaction(
@@ -101,3 +102,38 @@ def add_transaction(
         transaction_id=transaction_id,
         user_id=user_id
     )
+
+@router.put("/{transaction_id}")
+def edit_transaction(transaction_id: UUID, data: TransactionCreate, user_id: Annotated[UUID, Depends(get_current_user_id)]) -> TransactionRead:
+    try:
+        return update_transaction(
+            transaction_id=transaction_id,
+            data=data,
+            user_id=user_id,
+        )
+    except TransactionNotFoundError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        ) from error
+    except ValueError as error:
+        raise HTTPException(
+            status_code=422,
+            detail=str(error),
+        ) from error
+
+
+@router.delete("/{transaction_id}", status_code=204)
+def remove_transaction(transaction_id: UUID, user_id: Annotated[UUID, Depends(get_current_user_id)]) -> Response:
+    try:
+        delete_transaction(
+            transaction_id=transaction_id,
+            user_id=user_id,
+        )
+    except TransactionNotFoundError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        ) from error
+
+    return Response(status_code=204)
