@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
+from langchain_core.exceptions import OutputParserException
 
 from backend.app.schemas.input.transaction_input_models import TransactionDraftRequest
 from backend.app.schemas.inside.transactions_models import TransactionDraft
@@ -11,4 +12,11 @@ router = APIRouter(
 
 @router.post("/draft")
 def generate_transaction_draft(data: TransactionDraftRequest) -> TransactionDraft:
-    return prepare_transaction_draft(data.query)
+
+    try:
+        return prepare_transaction_draft(data.query)
+    except OutputParserException as error:
+        raise HTTPException(
+            status_code=502,
+            detail="AI returned invalid transaction details. Please try again"
+        ) from error

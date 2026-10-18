@@ -282,17 +282,24 @@ class AITransactionInput:
         yesterday = today - timedelta(days=1)
         tomorrow = today + timedelta(days=1)
         
-        # model setup
+        # model setup - 3 seconds or even less to get answer (also with Jev)
         llm = ChatOllama(
             model="qwen3.5:9b",
-            temperature=0.0
+            temperature=0.0,
+            num_ctx=4096,
+            reasoning=False,
         )
 
         structured_llm = llm.with_structured_output(ReasoningDetails)
 
         system_prompt = (
             "Extract structured details of the user's financial transaction.\n"
-            f"User timezone: {user_timezone}.\n"
+            "Amount rules: amount is the positive magnitude of the transaction, "
+            "not a signed account balance change. "
+            "For example, spending 80 EUR means amount=80, never amount=-80. "
+            "Transaction direction is classified separately as income, expense, "
+            "or transfer. Return null if the amount is missing or ambiguous.\n"
+                        f"User timezone: {user_timezone}.\n"
             f"Reference date / today: {today.isoformat()}.\n"
             f"Yesterday: {yesterday.isoformat()}.\n"
             f"Tomorrow: {tomorrow.isoformat()}.\n"
