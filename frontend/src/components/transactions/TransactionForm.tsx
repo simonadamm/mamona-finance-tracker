@@ -10,17 +10,18 @@ import TextField from '@mui/material/TextField'
 import { createTransaction } from '../../services/transactions'
 import type { CategoryRead } from '../../types/category'
 import type {
-  TransactionCreate,
+  TransactionFormValues,
   TransactionType,
 } from '../../types/transaction'
 
 interface TransactionFormProps {
   categories: CategoryRead[]
+  initialValues?: TransactionFormValues
   onCreated: () => void
   onSavingChange?: (saving: boolean) => void
 }
 
-function getEmptyForm(): TransactionCreate {
+function getEmptyForm(): TransactionFormValues {
   const today = new Date()
 
   const year = today.getFullYear()
@@ -40,10 +41,13 @@ function getEmptyForm(): TransactionCreate {
 
 export default function TransactionForm({
   categories,
+  initialValues,
   onCreated,
   onSavingChange,
 }: TransactionFormProps) {
-  const [form, setForm] = useState<TransactionCreate>(getEmptyForm)
+  const [form, setForm] = useState<TransactionFormValues>(
+    () => initialValues ?? getEmptyForm(),
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -53,6 +57,13 @@ export default function TransactionForm({
     if (saving) return
 
     setError(null)
+
+    const type = form.type
+
+    if (!type) {
+      setError('Select a transaction type.')
+      return
+    }
 
     const amount = form.amount.trim().replace(',', '.')
 
@@ -72,6 +83,7 @@ export default function TransactionForm({
     try {
       await createTransaction({
         ...form,
+        type,
         amount,
         currency: form.currency.trim().toUpperCase(),
         merchant_name: form.merchant_name?.trim() || null,

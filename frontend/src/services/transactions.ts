@@ -3,6 +3,7 @@ import type {
   TransactionCreate,
   TransactionQuery,
   TransactionRead,
+  TransactionDraft,
 } from '../types/transaction'
 
 export function getTransactions(
@@ -38,5 +39,19 @@ export function createTransaction(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
+  })
+}
+
+export function generateTransactionDraft(
+  query: string,
+  signal?: AbortSignal,
+): Promise<TransactionDraft> {
+  return apiRequest<TransactionDraft>('/transactions/draft', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query }),
+    signal,
   })
 }

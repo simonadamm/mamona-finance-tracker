@@ -32,3 +32,19 @@ export interface TransactionCreate {
   merchant_name: string | null
   description: string | null
 }
+
+export interface TransactionDraft {
+  category: string | null
+  category_id: string | null
+  type: TransactionType | null
+  amount: string | null
+  currency: string | null
+  transaction_date: string | null
+  merchant_name: string | null
+  description: string | null
+}
+
+export type TransactionFormValues =
+  Omit<TransactionCreate, 'type'> & {
+    type: TransactionType | ''
+  }

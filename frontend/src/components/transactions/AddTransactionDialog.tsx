@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import Box from '@mui/material/Box'
+import Alert from '@mui/material/Alert'
 import Dialog from '@mui/material/Dialog'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -16,6 +17,10 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import TransactionAiInput from './TransactionAiInput'
 import TransactionForm from './TransactionForm'
 import type { CategoryRead } from '../../types/category'
+import type {
+  TransactionDraft,
+  TransactionFormValues,
+} from '../../types/transaction'
 
 interface AddTransactionDialogProps {
   categories: CategoryRead[]
@@ -32,6 +37,24 @@ export default function AddTransactionDialog({
 }: AddTransactionDialogProps) {
   const [mode, setMode] = useState<InputMode>('ai')
   const [saving, setSaving] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [initialValues, setInitialValues] =
+    useState<TransactionFormValues | undefined>(undefined)
+  const [formVersion, setFormVersion] = useState(0)
+
+  function handleDraftReady(draft: TransactionDraft) {
+    setInitialValues({
+      category_id: draft.category_id ?? '',
+      type: draft.type ?? '',
+      amount: draft.amount ?? '',
+      currency: draft.currency ?? '',
+      transaction_date: draft.transaction_date ?? '',
+      merchant_name: draft.merchant_name ?? '',
+      description: draft.description ?? '',
+    })
+    setFormVersion((value) => value + 1)
+    setMode('manual')
+  }
 
   function handleClose() {
     if (!saving) onClose()
@@ -90,7 +113,7 @@ export default function AddTransactionDialog({
             label="AI Input"
             icon={<AutoAwesomeOutlinedIcon />}
             iconPosition="start"
-            disabled={saving}
+            disabled={saving || analyzing}
           />
           <Tab
             id="transaction-manual-tab"
@@ -99,7 +122,7 @@ export default function AddTransactionDialog({
             label="Manual input"
             icon={<EditOutlinedIcon />}
             iconPosition="start"
-            disabled={saving}
+            disabled={saving || analyzing}
           />
         </Tabs>
         <Box
@@ -108,7 +131,10 @@ export default function AddTransactionDialog({
           aria-labelledby="transaction-ai-tab"
           hidden={mode !== 'ai'}
         >
-          <TransactionAiInput />
+          <TransactionAiInput
+            onDraftReady={handleDraftReady}
+            onBusyChange={setAnalyzing}
+          />
         </Box>
         <Box
           role="tabpanel"
@@ -116,8 +142,16 @@ export default function AddTransactionDialog({
           aria-labelledby="transaction-manual-tab"
           hidden={mode !== 'manual'}
         >
+          {initialValues && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              AI draft ready. Check all values and complete any missing fields
+              before saving. A new AI preview will replace this draft.
+            </Alert>
+          )}
           <TransactionForm
+            key={formVersion}
             categories={categories}
+            initialValues={initialValues}
             onCreated={onCreated}
             onSavingChange={setSaving}
           />
