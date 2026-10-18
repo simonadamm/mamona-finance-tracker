@@ -4,10 +4,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from backend.app.api.dependencies import get_current_user_id
-from backend.app.schemas.inside.stats_models import MonthlyStatsRead
+from backend.app.schemas.inside.stats_models import MonthlyStatsRead, MonthlyHistoryRead
 from backend.app.services.analytics import (
     AnalyticsUserNotFoundError,
     get_monthly_stats,
+    get_monthly_history
 )
 
 
@@ -28,6 +29,27 @@ def read_monthly_stats(
             user_id=user_id,
             year=year,
             month=month,
+        )
+    except AnalyticsUserNotFoundError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        ) from error
+    except ValueError as error:
+        raise HTTPException(
+            status_code=422,
+            detail=str(error),
+        ) from error
+
+@router.get("/history")
+def read_monthly_history(
+    user_id: Annotated[UUID, Depends(get_current_user_id)],
+    months: Annotated[int, Query(ge=1, le=60)] = 12,
+) -> MonthlyHistoryRead:
+    try:
+        return get_monthly_history(
+            user_id=user_id,
+            months=months,
         )
     except AnalyticsUserNotFoundError as error:
         raise HTTPException(

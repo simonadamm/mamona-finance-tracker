@@ -78,3 +78,10 @@ def calculate_average_daily_expenses(total_expenses: Decimal, number_of_days: in
         Decimal("0.01"),
         rounding=ROUND_HALF_UP,
     )
+
+
+def calculate_remaining_budget(
+    net_cash_flow: Decimal,
+    net_savings: Decimal,
+) -> Decimal:
+    return net_cash_flow - net_savings

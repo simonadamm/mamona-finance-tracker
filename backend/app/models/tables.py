@@ -331,3 +331,57 @@ class AIMessages(Base):
     content = Column(Text, nullable=False)
 
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+# ==========================
+# SAVINGS MOVEMENTS
+# ==========================
+
+class SavingsMovements(Base):
+    __tablename__ = "savings_movements"
+
+    __table_args__ = (
+        CheckConstraint(
+            "type IN ('deposit', 'withdrawal')",
+            name="ck_savings_movements_type",
+        ),
+        CheckConstraint(
+            "amount > 0 AND amount <> 'NaN'::numeric",
+            name="ck_savings_movements_amount_positive",
+        ),
+        CheckConstraint(
+            "currency ~ '^[A-Z]{3}$'",
+            name="ck_savings_movements_currency_format",
+        ),
+    )
+
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+    )
+
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True,
+    )
+
+    type = Column(String(20), nullable=False)
+    amount = Column(Numeric(12, 2), nullable=False)
+    currency = Column(String(3), nullable=False)
+    movement_date = Column(Date, nullable=False)
+    description = Column(Text, nullable=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

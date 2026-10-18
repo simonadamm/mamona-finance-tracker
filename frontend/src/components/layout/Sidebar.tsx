@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography'
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined'
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined'
+import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined'
 
 const menuItems = [
   {
@@ -29,6 +30,11 @@ const menuItems = [
     label: 'Analyse',
     path: '/analyse',
     icon: BarChartOutlinedIcon,
+  },
+  {
+    label: 'Savings',
+    path: '/savings',
+    icon: SavingsOutlinedIcon,
   },
 ]
 

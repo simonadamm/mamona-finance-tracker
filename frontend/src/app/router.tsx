@@ -5,6 +5,7 @@ import HomePage from './pages/HomePage'
 import TransactionsPage from './pages/TransactionsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import AnalysePage from './pages/AnalysePage'
+import SavingsPage from './pages/SavingsPage'
 
 export default function AppRouter() {
   return (
@@ -20,6 +21,7 @@ export default function AppRouter() {
           />
 
           <Route path="analyse" element={<AnalysePage />} />
+          <Route path="savings" element={<SavingsPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

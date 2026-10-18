@@ -10,17 +10,10 @@ import Typography from '@mui/material/Typography'
 
 import MonthlyStatsSummary from '../../components/analytics/MonthlyStatsSummary'
 import MonthlyStatsCharts from '../../components/analytics/MonthlyStatsCharts'
+import SavingsDepositPanel from '../../components/savings/SavingsDepositPanel'
 import { getMonthlyStats } from '../../services/analytics'
 import type { MonthlyStatsRead } from '../../types/analytics'
-
-function getCurrentMonth() {
-  const parts = new Intl.DateTimeFormat('en', {
-    timeZone: 'Europe/Berlin', year: 'numeric', month: '2-digit',
-  }).formatToParts(new Date())
-  const year = parts.find((part) => part.type === 'year')?.value
-  const month = parts.find((part) => part.type === 'month')?.value
-  return `${year}-${month}`
-}
+import { getCurrentMonth } from '../../utils/formatters'
 
 export default function AnalysePage() {
   const [periodInput, setPeriodInput] = useState(getCurrentMonth)
@@ -30,6 +23,7 @@ export default function AnalysePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [inputError, setInputError] = useState<string | null>(null)
+  const [depositSaved, setDepositSaved] = useState<string | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -64,6 +58,7 @@ export default function AnalysePage() {
       return
     }
     setInputError(null)
+    setDepositSaved(null)
     setPeriod(periodInput)
     setReloadKey((value) => value + 1)
   }
@@ -96,6 +91,11 @@ export default function AnalysePage() {
         </Box>
       </Box>
 
+      {depositSaved && (
+        <Alert severity="success" onClose={() => setDepositSaved(null)} sx={{ mb: 2 }}>
+          Savings deposit recorded for {depositSaved}.
+        </Alert>
+      )}
       {loading && (
         <Box role="status" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CircularProgress size={24} aria-hidden="true" />Loading monthly statistics…
@@ -115,11 +115,18 @@ export default function AnalysePage() {
             <Alert severity="info" sx={{ mb: 2 }}>No income or expenses in {stats.currency} for this period.</Alert>
           )}
           <MonthlyStatsSummary stats={stats} />
+          <SavingsDepositPanel
+            stats={stats}
+            onDeposited={(movement) => {
+              setDepositSaved(movement.movement_date)
+              setReloadKey((value) => value + 1)
+            }}
+          />
           <MonthlyStatsCharts stats={stats} />
           <Alert severity="info" sx={{ mt: 3 }}>
-            Only recorded income and expenses in {stats.currency} are included.
-            Other currencies, transfers and future transactions are excluded.
-            Monthly statistics include records before your opening balance date.
+            Income, expenses and Savings movements are calculated in {stats.currency}.
+            Other currencies, transaction transfers and future entries are excluded.
+            Each month's budget is independent; unused amounts are not carried forward as income.
           </Alert>
         </>
       )}
