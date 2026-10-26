@@ -7,6 +7,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import LinearProgress from '@mui/material/LinearProgress'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined'
+import AddIcon from '@mui/icons-material/Add'
 
 import { getSavingGoals } from '../../services/savingGoals'
 import type { SavingGoalRead } from '../../types/savingGoal'
@@ -56,7 +58,7 @@ export default function SavingGoalsPanel({ currency, refreshKey, onAllocationCha
           <Typography component="h2" variant="h6">Savings goals</Typography>
           <Typography variant="body2" color="text.secondary">Set a target amount and date for what matters to you.</Typography>
         </Box>
-        <Button variant="contained" onClick={() => { setSuccess(null); setOpen(true) }}>Add goal</Button>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={() => { setSuccess(null); setOpen(true) }}>Add goal</Button>
       </Box>
       {success && <Alert severity="success" onClose={() => setSuccess(null)} sx={{ mb: 2 }}>{success}</Alert>}
       {loading ? (
@@ -71,18 +73,21 @@ export default function SavingGoalsPanel({ currency, refreshKey, onAllocationCha
         </Paper>
       ) : (
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
-          {goals.map((goal) => {
+          {goals.map((goal, index) => {
             const progress = Math.max(0, Math.min(100, Number(goal.current_amount) / Number(goal.target_amount) * 100))
             return (
-              <Paper key={goal.id} variant="outlined" sx={{ p: 3, minWidth: 0 }}>
+              <Paper key={goal.id} variant="outlined" className="goal-card" sx={{ p: 3, minWidth: 0, borderRadius: '24px' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                  <Box sx={{ display: 'grid', placeItems: 'center', width: 46, height: 46, borderRadius: '15px', bgcolor: ['#edf2ff', '#eef6e5', '#fff0ef'][index % 3], color: ['#245bff', '#498022', '#d73543'][index % 3] }}><FlagOutlinedIcon /></Box>
+                  <Chip size="small" label={goal.status} color={goal.status === 'completed' ? 'success' : 'default'} variant="outlined" />
+                </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: 1, mb: 1 }}>
                   <Typography component="h3" variant="h6" sx={{ overflowWrap: 'anywhere' }}>{goal.name}</Typography>
-                  <Chip size="small" label={goal.status} color={goal.status === 'completed' ? 'success' : 'default'} />
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Target date: {goal.target_date}</Typography>
-                <Typography variant="h5">{formatMoney(goal.current_amount, goal.currency)}</Typography>
+                <Typography variant="h5" sx={{ mt: 3, fontSize: 32, fontVariantNumeric: 'tabular-nums' }}>{formatMoney(goal.current_amount, goal.currency)}</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>of {formatMoney(goal.target_amount, goal.currency)}</Typography>
-                <LinearProgress variant="determinate" value={progress} aria-label={`Progress for ${goal.name}`} color="success" sx={{ height: 6, borderRadius: 1, mb: 1 }} />
+                <LinearProgress variant="determinate" value={progress} aria-label={`Progress for ${goal.name}`} color="success" sx={{ height: 6, borderRadius: 99, mb: 1, backgroundColor: '#f0f2eb', '& .MuiLinearProgress-bar': { borderRadius: 99 } }} />
                 <Typography variant="body2" color="text.secondary">{progress.toFixed(1)}% of target</Typography>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
                   <Button variant="contained" disabled={goal.status === 'cancelled'}

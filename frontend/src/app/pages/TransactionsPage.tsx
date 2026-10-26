@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
-import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import AddIcon from '@mui/icons-material/Add'
+import PageHeader from '../../components/layout/PageHeader'
 
 import TransactionTable from '../../components/transactions/TransactionTable'
 import { getTransactions } from '../../services/transactions'
@@ -100,17 +100,7 @@ export default function TransactionsPage() {
 
   return (
     <section>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 2,
-          mb: 2,
-        }}
-      >
-        <h1>Transactions</h1>
+      <PageHeader eyebrow="THE EVERYDAY DETAILS" title="Every move, in view." description={year ? 'Explore your transactions for the selected period.' : 'Your 50 most recent transactions, all in one place.'}>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -122,12 +112,7 @@ export default function TransactionsPage() {
         >
           Add new transaction
         </Button>
-      </Box>
-      <p>
-        {year
-          ? 'Transactions for the selected period'
-          : 'Last 50 transactions'}
-      </p>
+      </PageHeader>
 
       {transactionSaved && (
         <Alert

@@ -6,6 +6,9 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import PageHeader from '../../components/layout/PageHeader'
 
 import MonthlyStatsSummary from '../../components/analytics/MonthlyStatsSummary'
 import MonthlyStatsCharts from '../../components/analytics/MonthlyStatsCharts'
@@ -49,20 +52,14 @@ export default function HomePage() {
 
   return (
     <section>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-        <h1>Overview</h1>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Button color="inherit" disabled={loading} onClick={() => setReloadKey((value) => value + 1)}>
+      <PageHeader eyebrow="THE BIG PICTURE" title="Your money, at a glance." description="A fresh perspective on your month. Track your spending and make room for what matters.">
+          <Button color="inherit" startIcon={<RefreshIcon />} disabled={loading} onClick={() => setReloadKey((value) => value + 1)}>
             Refresh
           </Button>
-          <Button component={RouterLink} to="/analyse" variant="contained">
-            Explore monthly analysis
+          <Button component={RouterLink} to="/analyse" variant="contained" endIcon={<ArrowForwardIcon />}>
+            Monthly analysis
           </Button>
-        </Box>
-      </Box>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Your current month's income, expenses and remaining budget.
-      </Typography>
+      </PageHeader>
       {depositSaved && (
         <Alert severity="success" onClose={() => setDepositSaved(null)} sx={{ mb: 2 }}>
           Savings deposit recorded for {depositSaved}.
@@ -80,7 +77,7 @@ export default function HomePage() {
       )}
       {!loading && !error && stats && (
         <>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" className="page-content-note" sx={{ mb: 2 }}>
             Period: {stats.period_start} to {stats.period_end}, inclusive. Currency: {stats.currency}.
           </Typography>
           {Number(stats.total_income) === 0 && Number(stats.total_expenses) === 0 && (

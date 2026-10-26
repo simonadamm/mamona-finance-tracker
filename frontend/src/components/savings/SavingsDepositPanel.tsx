@@ -11,6 +11,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 import Paper from '@mui/material/Paper'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+import NorthEastIcon from '@mui/icons-material/NorthEast'
 
 import { createSavingsDeposit } from '../../services/savings'
 import type { MonthlyStatsRead } from '../../types/analytics'
@@ -113,15 +114,15 @@ export default function SavingsDepositPanel({ stats, onDeposited }: SavingsDepos
   const [open, setOpen] = useState(false)
 
   return (
-    <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
+    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: '24px', backgroundColor: '#edf2ff', borderColor: '#e0e8fc' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
         <Box>
           <Typography variant="h6" component="h2">Set money aside</Typography>
           <Typography variant="body2" color="text.secondary">
-            Add a Savings deposit for this month, at any point during the month.
+            A little today, a step towards tomorrow. Set aside money from this month's budget.
           </Typography>
         </Box>
-        <Button variant="contained" onClick={() => setOpen(true)}>Add to Savings</Button>
+        <Button variant="contained" endIcon={<NorthEastIcon />} onClick={() => setOpen(true)}>Add to Savings</Button>
       </Box>
       {open && (
         <SavingsDepositDialog

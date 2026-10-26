@@ -7,6 +7,7 @@ import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
+import PageHeader from '../../components/layout/PageHeader'
 
 import MonthlyStatsSummary from '../../components/analytics/MonthlyStatsSummary'
 import MonthlyStatsCharts from '../../components/analytics/MonthlyStatsCharts'
@@ -65,11 +66,7 @@ export default function AnalysePage() {
 
   return (
     <section>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-        <Box>
-          <h1>Analyse</h1>
-          <Typography color="text.secondary">Monthly income, expenses and cash flow.</Typography>
-        </Box>
+      <PageHeader eyebrow="KNOW YOUR NUMBERS" title="A month in perspective." description="Follow your cash flow, see where it goes and find your balance.">
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', alignItems: 'flex-start', flexWrap: 'wrap', gap: 2 }}>
           <TextField
             required
@@ -89,7 +86,7 @@ export default function AnalysePage() {
             Show statistics
           </Button>
         </Box>
-      </Box>
+      </PageHeader>
 
       {depositSaved && (
         <Alert severity="success" onClose={() => setDepositSaved(null)} sx={{ mb: 2 }}>

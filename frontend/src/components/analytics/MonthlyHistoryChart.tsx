@@ -64,9 +64,10 @@ export default function MonthlyHistoryChart({ refreshKey }: { refreshKey: number
   const hasActivity = points.some((point) => Number(point.total_income) > 0 || Number(point.total_expenses) > 0)
 
   return (
-    <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
+    <Paper variant="outlined" sx={{ p: { xs: 2.5, sm: 3.5 }, minWidth: 0, borderRadius: '24px' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2 }}>
         <Box>
+          <p className="section-kicker" style={{ margin: '0 0 8px' }}>THE LONGER VIEW</p>
           <Typography variant="h6" component="h2">Monthly history</Typography>
           <Typography variant="body2" color="text.secondary">Compare recorded income and expenses over time.</Typography>
         </Box>
@@ -133,15 +134,15 @@ export default function MonthlyHistoryChart({ refreshKey }: { refreshKey: number
                         onFocus={() => setSelectedKey(key)}
                         sx={{
                           flex: '1 0 72px', minWidth: 72, p: 0.75, cursor: 'pointer',
-                          display: 'flex', flexDirection: 'column', background: active ? '#f1f5f9' : 'transparent',
+                          display: 'flex', flexDirection: 'column', background: active ? '#f0f3eb' : 'transparent',
                           color: 'inherit', font: 'inherit', border: 0, borderBottom: '2px solid',
                           borderBottomColor: active ? '#171717' : 'transparent', borderRadius: 1,
                           '&:focus-visible': { outline: '2px solid #171717', outlineOffset: -2 },
                         }}
                       >
                         <Box aria-hidden="true" sx={{ flex: 1, width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 0.5, borderBottom: '1px solid #cbd5e1' }}>
-                          <Box sx={{ width: 18, height: `${Number(point.total_income) / maximum * 100}%`, backgroundColor: '#008a4b', borderRadius: '3px 3px 0 0', opacity: point.is_current_month ? 0.65 : 1 }} />
-                          <Box sx={{ width: 18, height: `${Number(point.total_expenses) / maximum * 100}%`, backgroundColor: '#d32f2f', borderRadius: '3px 3px 0 0', opacity: point.is_current_month ? 0.65 : 1 }} />
+                          <Box sx={{ width: 18, height: `${Number(point.total_income) / maximum * 100}%`, backgroundColor: '#0ba66b', borderRadius: '6px 6px 0 0', opacity: point.is_current_month ? 0.65 : 1 }} />
+                          <Box sx={{ width: 18, height: `${Number(point.total_expenses) / maximum * 100}%`, backgroundColor: '#fa6959', borderRadius: '6px 6px 0 0', opacity: point.is_current_month ? 0.65 : 1 }} />
                         </Box>
                         <Typography variant="caption" component="span" sx={{ height: 38, pt: 0.75, lineHeight: 1.3 }}>
                           {monthLabel(point)}{point.is_current_month ? ' *' : ''}
@@ -153,7 +154,7 @@ export default function MonthlyHistoryChart({ refreshKey }: { refreshKey: number
               </Box>
 
               {selected && (
-                <Box aria-live="polite" sx={{ mt: 2, p: 2, backgroundColor: '#f8fafc', borderRadius: 2 }}>
+                <Box aria-live="polite" sx={{ mt: 2, p: 2.5, backgroundColor: '#f6f7f3', borderRadius: '16px' }}>
                   <Typography sx={{ fontWeight: 600, mb: 1 }}>
                     {monthLabel(selected)}{selected.is_current_month ? ` · In progress, through ${history.as_of}` : ''}
                   </Typography>

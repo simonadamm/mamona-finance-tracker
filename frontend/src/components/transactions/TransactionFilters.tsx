@@ -51,6 +51,11 @@ export default function TransactionFilters({
         flexWrap: 'wrap',
         gap: 2,
         mb: 3,
+        p: 2.5,
+        borderRadius: '22px',
+        backgroundColor: '#ffffff',
+        border: '1px solid #e9e9e6',
+        '& .MuiTextField-root': { flexGrow: 1 },
       }}
     >
       <TextField

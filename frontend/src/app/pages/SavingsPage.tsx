@@ -6,6 +6,8 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
+import PageHeader from '../../components/layout/PageHeader'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 
 import SavingsSummary from '../../components/savings/SavingsSummary'
 import SavingsMovementsTable from '../../components/savings/SavingsMovementsTable'
@@ -77,16 +79,10 @@ export default function SavingsPage() {
 
   return (
     <section>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-        <h1>Savings</h1>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      <PageHeader eyebrow="MAKE ROOM FOR TOMORROW" title="Small steps. Bigger plans." description="Your money set aside, your goals ahead. Give your savings a purpose.">
           <Button color="inherit" disabled={summaryLoading || historyLoading} onClick={retry}>Refresh</Button>
-          <Button component={RouterLink} to="/analyse" variant="contained">Record a monthly deposit</Button>
-        </Box>
-      </Box>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Money set aside across all recorded months, with a history of deposits and withdrawals.
-      </Typography>
+          <Button component={RouterLink} to="/analyse" variant="contained" endIcon={<ArrowForwardIcon />}>Record a monthly deposit</Button>
+      </PageHeader>
 
       {summaryLoading && (
         <Box role="status" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
@@ -99,7 +95,7 @@ export default function SavingsPage() {
       {!summaryLoading && !summaryError && summary && (
         <>
           <SavingsSummary summary={summary} />
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary" className="page-content-note" sx={{ mb: 3 }}>
             As of {summary.as_of}. Only {summary.currency} movements are included;
             future movements are excluded. Savings carry across months, independently
             of each month's budget. Totals include all operations, not just this page of history.
