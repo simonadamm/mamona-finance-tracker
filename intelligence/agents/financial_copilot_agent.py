@@ -2,7 +2,7 @@ from langchain.agents import create_agent
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import InMemorySaver
 
-from intelligence.agents.context import AgentContext
+from intelligence.agents.context import UserContext
 from intelligence.agent_tools.sql_tools import (
     get_monthly_summary,
     search_transactions,
@@ -20,7 +20,7 @@ financial_copilot_agent = create_agent(
     model=MODEL,
     tools=[get_monthly_summary, search_transactions, list_categories],
     checkpointer=InMemorySaver(),
-    context_schema=AgentContext,
+    context_schema=UserContext,
     system_prompt=(
         "You are a financial assistant."
         "Use the monthly summary tool for questions about the user's "

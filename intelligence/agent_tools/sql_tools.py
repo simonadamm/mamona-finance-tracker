@@ -2,7 +2,7 @@ from typing import Literal
 from uuid import UUID
 
 from langchain.tools import tool, ToolRuntime
-from intelligence.agents.context import AgentContext
+from intelligence.agents.context import UserContext
 
 from datetime import date
 
@@ -17,7 +17,7 @@ from backend.app.services.analytics import get_monthly_stats
 from backend.app.services.categories import get_categories
 
 @tool
-def get_monthly_summary(year: int, month: int, runtime: ToolRuntime[AgentContext]) -> dict:
+def get_monthly_summary(year: int, month: int, runtime: ToolRuntime[UserContext]) -> dict:
     """Get monthly income, expenses, Savings movements, remaining budget, and expenses by category for the current user.
 
     Args:
@@ -36,7 +36,7 @@ def get_monthly_summary(year: int, month: int, runtime: ToolRuntime[AgentContext
 def search_transactions(
     start_date: date, 
     end_date: date,
-    runtime: ToolRuntime[AgentContext],
+    runtime: ToolRuntime[UserContext],
     transaction_type: Literal["income", "expense", "transfer"], 
     limit: int = 20,
     offset: int = 0,
