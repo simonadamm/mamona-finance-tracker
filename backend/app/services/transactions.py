@@ -1,12 +1,14 @@
 from uuid import UUID
 from sqlalchemy import select
 from datetime import date
+from typing import Literal
 
 from backend.app.db.db_engine import SessionLocal
 from backend.app.models.tables import Categories, Transactions, Users
 from backend.app.schemas.inside.transactions_models import (
     TransactionCreate,
     TransactionRead,
+    TransactionSearchResult,
 )
 # List of months
 MONTHS = {
@@ -241,3 +243,74 @@ def delete_transaction(transaction_id: UUID, user_id: UUID) -> None:
             raise TransactionNotFoundError("Transaction not found.")
 
         session.delete(transaction)
+
+# ==========================
+# Search Transactions
+# ==========================
+def search_transactions(
+    user_id: UUID,
+    start_date: date,
+    end_date: date,
+    transaction_type: Literal["income", "expense", "transfer"] | None = None,
+    limit: int = 20,
+    offset: int = 0,
+    category_id: UUID | None = None,
+) -> TransactionSearchResult:
+    if end_date < start_date:
+        raise ValueError("End date cannot precede start date.")
+
+    if not 1 <= limit <= 50:
+        raise ValueError("Limit must be between 1 and 50.")
+
+    if offset < 0:
+        raise ValueError("Offset cannot be negative.")
+
+    if transaction_type not in (None, "income", "expense", "transfer"):
+        raise ValueError("Unsupported transaction type.")
+
+    statement = select(Transactions).where(
+        Transactions.user_id == user_id,
+        Transactions.transaction_date >= start_date,
+        Transactions.transaction_date <= end_date,
+    )
+
+    if transaction_type is not None:
+        statement = statement.where(
+            Transactions.type == transaction_type
+        )
+    if category_id is not None:
+        statement = statement.where(
+            Transactions.category_id == category_id
+        )
+
+    statement = (
+        statement
+        .order_by(
+            Transactions.transaction_date.desc(),
+            Transactions.created_at.desc(),
+            Transactions.id.desc(),
+        )
+        .offset(offset)
+        .limit(limit + 1)
+    )
+
+    with SessionLocal() as session:
+        if session.get(Users, user_id) is None:
+            raise ValueError("User not found.")
+
+        transactions = session.scalars(statement).all()
+
+        has_more = len(transactions) > limit
+
+        items = [
+            TransactionRead.model_validate(transaction)
+            for transaction in transactions[:limit]
+        ]
+
+    return TransactionSearchResult(
+        items=items,
+        limit=limit,
+        offset=offset,
+        has_more=has_more,
+        next_offset=offset + limit if has_more else None,
+    )

@@ -70,3 +70,13 @@ class TransactionDraft(BaseModel):
         max_length=255
     )
     description: str | None = None
+
+# ============================================
+# Transaction Search Result for AI Agent Tool
+# ============================================
+class TransactionSearchResult(BaseModel):
+    items: list[TransactionRead]
+    limit: int          # limit of results
+    offset: int         # how much results should be skipped before final results 
+    has_more: bool
+    next_offset: int | None = None
