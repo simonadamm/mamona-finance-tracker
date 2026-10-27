@@ -9,6 +9,7 @@ from backend.app.api.balance import router as balance_router
 from backend.app.api.analytics import router as analytics_router
 from backend.app.api.savings import router as savings_router
 from backend.app.api.saving_goals import router as saving_goals_router
+from backend.app.api.financial_copilot import router as financial_copilot_router
 
 
 app = FastAPI(title="Mamona")
@@ -21,3 +22,4 @@ app.include_router(balance_router)
 app.include_router(analytics_router)
 app.include_router(savings_router)
 app.include_router(saving_goals_router)
+app.include_router(financial_copilot_router)

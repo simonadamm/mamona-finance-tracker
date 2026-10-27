@@ -37,7 +37,7 @@ def search_transactions(
     start_date: date, 
     end_date: date,
     runtime: ToolRuntime[UserContext],
-    transaction_type: Literal["income", "expense", "transfer"], 
+    transaction_type: Literal["income", "expense", "transfer"] | None, 
     limit: int = 20,
     offset: int = 0,
     category_id: UUID | None = None,

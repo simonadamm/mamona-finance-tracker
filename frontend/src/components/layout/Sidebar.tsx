@@ -6,12 +6,14 @@ import SavingsOutlinedIcon from '@mui/icons-material/SavingsOutlined'
 import NorthEastIcon from '@mui/icons-material/NorthEast'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import AllInclusiveIcon from '@mui/icons-material/AllInclusive'
+import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined'
 
 const menuItems = [
   { label: 'Overview', path: '/', icon: GridViewOutlinedIcon },
   { label: 'Transactions', path: '/transactions', icon: ReceiptLongOutlinedIcon },
   { label: 'Analysis', path: '/analyse', icon: BarChartOutlinedIcon },
   { label: 'Savings', path: '/savings', icon: SavingsOutlinedIcon },
+  { label: 'Copilot', path: '/copilot', icon: AutoAwesomeOutlinedIcon },
 ]
 
 export default function Sidebar() {

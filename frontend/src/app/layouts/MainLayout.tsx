@@ -2,7 +2,7 @@ import { Outlet, useLocation } from 'react-router'
 import Sidebar from '../../components/layout/Sidebar'
 
 const pageNames: Record<string, string> = {
-  '/': 'Overview', '/transactions': 'Transactions', '/analyse': 'Analysis', '/savings': 'Savings',
+  '/': 'Overview', '/transactions': 'Transactions', '/analyse': 'Analysis', '/savings': 'Savings', '/copilot': 'Financial Copilot',
 }
 
 export default function MainLayout() {
