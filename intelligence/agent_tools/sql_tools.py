@@ -1,6 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
+from langsmith import traceable
 from langchain.tools import tool, ToolRuntime
 from intelligence.agents.context import UserContext
 

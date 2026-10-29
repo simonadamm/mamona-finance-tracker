@@ -1,5 +1,7 @@
 from uuid import UUID, uuid4
 
+from langsmith import traceable
+
 from backend.app.schemas.inside.ai_conversations_models import (
     FinancialCopilotRequest,
     FinancialCopilotResponse
@@ -7,6 +9,9 @@ from backend.app.schemas.inside.ai_conversations_models import (
 from intelligence.agents.context import UserContext
 from intelligence.harness.workflow import workflow
 
+@traceable(
+    name="financial_copilot.request"
+)
 def ask_financial_copilot(user_id: UUID, data: FinancialCopilotRequest) -> FinancialCopilotResponse:
     thread_id = data.thread_id or uuid4()
 

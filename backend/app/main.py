@@ -1,6 +1,9 @@
 # Main file for FastAPI
-
+from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI
+
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 from backend.app.api.transactions import router as transactions_router
 from backend.app.api.categories import router as categories_router

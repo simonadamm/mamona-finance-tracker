@@ -5,10 +5,12 @@ from backend.app.models.tables import Categories
 from backend.app.schemas.inside.transactions_models import TransactionDraft
 from intelligence.ai_tools.transaction_input import AITransactionInput
 
+from langsmith import traceable
+
 # =======================================
 # Create TransactionDraft using AI Tool
 # =======================================
-
+@traceable
 def prepare_transaction_draft(query: str) -> TransactionDraft:
     tool = AITransactionInput()
     draft = tool.run(query)     # returns TransactionDraft

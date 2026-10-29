@@ -2,6 +2,8 @@ from typesafe_sdk import TypeSafeClient, Choice
 from typing import Literal
 from pydantic import BaseModel
 
+from langsmith import traceable
+
 class RoutingDecision(BaseModel):
     route: Literal[
         "financial",
@@ -9,7 +11,9 @@ class RoutingDecision(BaseModel):
         "clarification",
     ]
 
-
+@traceable(
+    name="question_router"
+)
 def router(query: str, history: list[dict[str, str]] | None = None) -> RoutingDecision:
 
     client = TypeSafeClient()

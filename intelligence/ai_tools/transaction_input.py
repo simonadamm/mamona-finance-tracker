@@ -7,6 +7,7 @@ from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
 # Langchain's libraries
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
+from langsmith import traceable
 
 # ReasoningDetails Libraries
 import re
@@ -119,6 +120,7 @@ class ReasoningDetails(BaseModel):
 class AITransactionInput:
 
     # Using Jev type model to check domain of input (is it related with transactions topic)
+    @traceable
     def _domain_check(self, query: str):
 
         client = TypeSafeClient()
@@ -142,6 +144,7 @@ class AITransactionInput:
         return domain_check_response
 
     # Using Jev type model to classify category and amount
+    @traceable
     def _clasification(self, query: str):
 
         client = TypeSafeClient()
@@ -274,7 +277,8 @@ class AITransactionInput:
 
         return response
 
-    # Using LLM to recognize 
+    # Using LLM to recognize
+    @traceable
     def _reasoning(self, query: str, user_timezone: str) -> ReasoningDetails:
 
         # date
@@ -322,6 +326,7 @@ class AITransactionInput:
             ("human", query),
         ])
 
+    @traceable
     def run(self, query: str, user_timezone: str = "Europe/Berlin") -> TransactionDraft:
 
         # Domain check

@@ -1,0 +1,66 @@
+{
+    "dataset_name": "small evaluation dataset",
+    "queries":
+        [
+            {
+                "queryID": "se-1",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-2",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-3",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-4",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-5",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-5",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-7",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-8",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-9",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            },
+            {
+                "queryID": "se-10",
+                "query_text": "text",
+                "expected_tools": ["tools"],
+                "predicted_answer_context": "predicted context"
+            }
+        ]
+}   

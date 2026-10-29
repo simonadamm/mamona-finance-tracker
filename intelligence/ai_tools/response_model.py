@@ -1,5 +1,6 @@
 from langchain_core.messages import SystemMessage
 from langchain_ollama import ChatOllama
+from langsmith import traceable
 
 response_model = ChatOllama(
     model="qwen3.5:9b",
@@ -8,6 +9,7 @@ response_model = ChatOllama(
     reasoning=False,
 )
 
+@traceable
 def out_of_scope_node(state):
 
     response = response_model.invoke([
@@ -30,6 +32,7 @@ def out_of_scope_node(state):
 
     return {"messages": [response]}
 
+@traceable
 def clarification_node(state):
 
     response = response_model.invoke([

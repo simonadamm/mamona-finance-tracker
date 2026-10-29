@@ -1,5 +1,6 @@
 import os
 
+from langsmith import traceable
 from langchain_core.tools import tool
 from tavily import TavilyClient
 
