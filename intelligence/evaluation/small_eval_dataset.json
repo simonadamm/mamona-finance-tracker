@@ -1,66 +1,82 @@
 {
     "dataset_name": "small evaluation dataset",
-    "queries":
-        [
-            {
-                "queryID": "se-1",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-2",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-3",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-4",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-5",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-5",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-7",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-8",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-9",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            },
-            {
-                "queryID": "se-10",
-                "query_text": "text",
-                "expected_tools": ["tools"],
-                "predicted_answer_context": "predicted context"
-            }
-        ]
-}   
+    "queries": [
+        {
+            "queryID": "se-1",
+            "query_text": "Summarize my income, expenses and monthly balance for September 2026. Keep the answer focused on those three figures.",
+            "expected_tools": [
+                "get_monthly_summary"
+            ],
+            "predicted_answer_context": "Expected route: financial. Use get_monthly_summary with year=2026 and month=9. Report total income, total expenses and monthly balance in the currency returned by the tool. Monthly balance means income minus expenses, before Savings. All figures must match the tool result. Do not substitute remaining_budget for monthly balance, invent additional figures, or search the web."
+        },
+        {
+            "queryID": "se-2",
+            "query_text": "How much did I spend on groceries in August 2025?",
+            "expected_tools": [
+                "get_monthly_summary"
+            ],
+            "predicted_answer_context": "Expected route: financial. Use get_monthly_summary with year=2025 and month=8. Read the Groceries amount from the full expenses_by_category breakdown and state the period and currency. If the category is absent from the successful complete summary, explain that no grocery expenses are recorded in that summary. Do not sum a paginated transaction list or include unrelated monthly income and budget figures. Web search is unnecessary."
+        },
+        {
+            "queryID": "se-3",
+            "query_text": "What were my three largest expense categories in July 2026? Show the categories and their amounts, from highest to lowest.",
+            "expected_tools": [
+                "get_monthly_summary"
+            ],
+            "predicted_answer_context": "Expected route: financial. Use get_monthly_summary with year=2026 and month=7. Identify up to three categories with the highest expense amounts in expenses_by_category, sorted in descending order. Report their actual names, amounts and currency. If fewer than three categories exist, show only those present. Do not treat Savings movements as expense categories or invent categories or amounts. No web search is needed."
+        },
+        {
+            "queryID": "se-4",
+            "query_text": "Show my five most recent expense transactions from September 2026, with their dates, merchants, descriptions, amounts and currencies.",
+            "expected_tools": [
+                "search_transactions"
+            ],
+            "predicted_answer_context": "Expected route: financial. Search with start_date=2026-09-01, end_date=2026-09-30, transaction_type=expense, limit=5 and offset=0, without a category filter. Return only the matching records provided by the tool, newest first, preserving their dates, merchant names, descriptions, amounts and currencies. Missing merchant names or descriptions must remain unknown rather than be invented. If has_more is true, make clear that these are only the five most recent matching expenses. Do not present their sum as the complete monthly total. No web search or monthly summary is needed."
+        },
+        {
+            "queryID": "se-5",
+            "query_text": "Show my five most recent grocery expense transactions from May 2026. If more matching transactions exist, say that this is only the first page.",
+            "expected_tools": [
+                "list_categories",
+                "search_transactions"
+            ],
+            "predicted_answer_context": "Expected route: financial. In a fresh conversation, obtain the UUID for the Groceries category from list_categories, then call search_transactions with that category_id, transaction_type=expense, start_date=2026-05-01, end_date=2026-05-31, limit=5 and offset=0. Return the matching records newest first with dates, merchants, amounts and currencies. Respect has_more when describing whether more records exist. Do not invent a category UUID, confuse Groceries with Dining Out & Cafes, or present the first page as all grocery spending. Web search is unnecessary."
+        },
+        {
+            "queryID": "se-6",
+            "query_text": "For July 2025, show my monthly balance before Savings, the net amount transferred to Savings, and the remaining budget after Savings. Explain the difference briefly.",
+            "expected_tools": [
+                "get_monthly_summary"
+            ],
+            "predicted_answer_context": "Expected route: financial. Use get_monthly_summary with year=2025 and month=7. Report net_cash_flow, net_savings and remaining_budget exactly as returned, with the currency. Explain that monthly balance is income minus expenses, net Savings is deposits minus withdrawals, and remaining budget is monthly balance minus net Savings. Preserve negative values and zeros. If net Savings is zero, explain why the two balance figures are equal. Savings deposits are not expenses. Do not describe these figures as a bank-account balance or invent Savings activity. No web search is needed."
+        },
+        {
+            "queryID": "se-7",
+            "query_text": "Compare my total income and total expenses in July 2026 and August 2026. Show both months side by side and tell me which month had higher expenses.",
+            "expected_tools": [
+                "get_monthly_summary"
+            ],
+            "predicted_answer_context": "Expected route: financial. Obtain a separate monthly summary for July 2026 and August 2026: year=2026 with month=7 and month=8, requiring two get_monthly_summary calls. Report each month's total_income and total_expenses with the currency, clearly label both periods, and correctly identify the month with higher expenses or a tie. Base the comparison on complete summaries, not transaction pages. Do not invent a compare_periods tool, claim a trend from additional unrequested months, or use web search. A percentage change is not requested."
+        },
+        {
+            "queryID": "se-8",
+            "query_text": "And what about that?",
+            "expected_tools": [],
+            "predicted_answer_context": "Expected route: clarification. Run this as the first message of a fresh conversation with no history. Ask one short question to establish what the user is referring to. Do not assume a month, category, amount or earlier topic. Do not call financial tools or web_search, and do not invent financial information."
+        },
+        {
+            "queryID": "se-9",
+            "query_text": "How do I cook spaghetti carbonara?",
+            "expected_tools": [],
+            "predicted_answer_context": "Expected route: out_of_scope. Briefly and politely explain that the assistant handles personal-finance and financial or economic questions, and invite a question within that scope. Do not provide a recipe, call any agent tools, or search the web. Do not falsely claim that the application lacks web-search capability."
+        },
+        {
+            "queryID": "se-10",
+            "query_text": "Search the web for the latest euro-area inflation rate and cite official sources. Include the reference month and year, and say whether the figure is a flash estimate or a final release.",
+            "expected_tools": [
+                "web_search"
+            ],
+            "predicted_answer_context": "Expected route: financial, even though the question does not concern the user's own transactions. Use web_search for current evidence, preferring official Eurostat releases. Identify the latest available euro-area annual headline HICP inflation rate supported by the retrieved sources, including its reference month and year and whether it is a flash estimate or final release. Distinguish the euro area from the entire EU and distinguish annual inflation from a monthly change. Cite direct supporting official URLs returned by the tool and do not invent figures, release dates, estimate status or links. If the retrieved evidence cannot establish the latest figure or its status, explicitly state the limitation instead of guessing. Do not call personal-transaction tools. The expected numeric value is intentionally not fixed because releases change over time."
+        }
+    ]
+}
