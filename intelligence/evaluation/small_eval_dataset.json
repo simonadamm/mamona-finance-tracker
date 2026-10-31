@@ -54,6 +54,7 @@
             "queryID": "se-7",
             "query_text": "Compare my total income and total expenses in July 2026 and August 2026. Show both months side by side and tell me which month had higher expenses.",
             "expected_tools": [
+                "get_monthly_summary",
                 "get_monthly_summary"
             ],
             "predicted_answer_context": "Expected route: financial. Obtain a separate monthly summary for July 2026 and August 2026: year=2026 with month=7 and month=8, requiring two get_monthly_summary calls. Report each month's total_income and total_expenses with the currency, clearly label both periods, and correctly identify the month with higher expenses or a tie. Base the comparison on complete summaries, not transaction pages. Do not invent a compare_periods tool, claim a trend from additional unrequested months, or use web search. A percentage change is not requested."

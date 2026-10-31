@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
@@ -39,6 +39,7 @@ export default function FinancialCopilotPage() {
   const threadId = useRef<string | null>(null)
   const request = useRef<AbortController | null>(null)
   const transcript = useRef<HTMLDivElement | null>(null)
+  const latestMessage = useRef<HTMLElement | null>(null)
   const form = useRef<HTMLFormElement | null>(null)
   const input = useRef<HTMLTextAreaElement | null>(null)
 
@@ -48,9 +49,25 @@ export default function FinancialCopilotPage() {
     threadId.current = null
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = transcript.current
-    if (element) element.scrollTop = element.scrollHeight
+    if (!element) return
+
+    const message = latestMessage.current
+    const lastMessage = messages[messages.length - 1]
+
+    if (lastMessage?.role === 'assistant' && message) {
+      // Scroll only the transcript, keeping the beginning of a long reply visible.
+      const top = message.getBoundingClientRect().top
+        - element.getBoundingClientRect().top
+        + element.scrollTop
+        - element.clientTop
+      const padding = Number.parseFloat(getComputedStyle(element).paddingTop) || 0
+      element.scrollTop = Math.max(0, top - padding)
+    } else {
+      // Keep the submitted question, loading indicator or error in view.
+      element.scrollTop = element.scrollHeight
+    }
   }, [messages, pending, error])
 
   function newChat() {
@@ -141,7 +158,9 @@ export default function FinancialCopilotPage() {
             ) : (
               <div role="log" aria-label="Chat messages" aria-live="polite" aria-relevant="additions" className="copilot-messages">
                 {messages.map((message) => (
-                  <article key={message.id} className={`copilot-message ${message.role}`} aria-label={message.role === 'user' ? 'Your message' : 'Copilot response'}>
+                  <article key={message.id}
+                    ref={message.id === messages[messages.length - 1]?.id ? latestMessage : undefined}
+                    className={`copilot-message ${message.role}`} aria-label={message.role === 'user' ? 'Your message' : 'Copilot response'}>
                     {message.role === 'assistant' && <span className="copilot-avatar"><AutoAwesomeOutlinedIcon sx={{ fontSize: 17 }} /></span>}
                     <div className="copilot-message-body">
                       <span className="copilot-message-author">{message.role === 'user' ? 'You' : 'Financial Copilot'}</span>

@@ -1,7 +1,12 @@
 from langgraph.graph import START, END, StateGraph, MessagesState
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.runtime import Runtime
+from langchain_core.messages import SystemMessage
 from typing import Literal
+
+# Current date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # User Context
 from intelligence.agents.context import UserContext
@@ -55,8 +60,28 @@ def choose_route(state: State):
 
 # UTILS - financial node
 def financial_node(state: State, runtime: Runtime[UserContext]):
+    today = datetime.now(ZoneInfo("Europe/Berlin")).date()
+
+    # Save current date
+    date_context = SystemMessage(
+        content=(
+            f"Current date: {today.isoformat()}. "
+            "Timezone: Europe/Berlin. "
+            "Use this date to interpret relative dates and assess "
+            "the freshness of web search results. "
+            "For questions asking for the latest information, verify "
+            "the reference period and publication date. "
+            "Do not assume that the first search result is current."
+        )
+    )
+
     result = financial_copilot_agent.invoke(
-        {"messages": state["messages"]},
+        {
+            "messages": [
+                date_context,
+                *state["messages"],
+            ]
+        },
         context=runtime.context,
     )
 

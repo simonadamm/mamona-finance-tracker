@@ -1,2091 +1,456 @@
-# Personal Finance AI
+# Mamona
 
-Personal Finance AI is a portfolio-oriented web application for tracking, analyzing, forecasting, and understanding personal finances using:
+### A monthly budget tracker with a financial AI copilot
 
-- Large Language Models,
-- AI agents,
-- a custom lightweight agent harness,
-- machine learning,
-- statistical analysis,
-- deterministic financial logic,
-- modern backend and frontend engineering.
+Mamona brings transaction tracking, monthly analytics and Savings goals into one workspace. Add an expense in plain language, review the extracted details before saving, and ask a copilot questions about your recorded finances or current financial information.
 
-The goal is not to build a production fintech platform or compete with commercial banking applications.
+I built this project to explore the engineering around a tool-using agent: structured inputs, deterministic financial calculations, controlled data access, conversation routing, tracing and evaluation against recorded evidence.
 
-The primary goal is to demonstrate practical **AI Engineering and AI Systems Engineering** skills through a realistic end-to-end application.
+**Python · FastAPI · PostgreSQL · React / TypeScript · LangGraph · Ollama · Jev · LangSmith**
 
-The project focuses especially on:
+![Mamona overview with monthly income, expenses, remaining budget and Savings](docs/assets/overview.png)
 
-- natural-language financial input,
-- structured data extraction,
-- agentic workflows,
-- controlled tool calling,
-- agent runtime design,
-- financial analytics,
-- machine-learning inference,
-- forecasting,
-- anomaly detection,
-- evaluation,
-- observability,
-- reliability,
-- interactive dashboards.
+[Features](#features) · [Architecture](#architecture-and-ai-harness) · [Evaluation](#evaluation) · [Run locally](#run-locally) · [Limitations](#current-limitations)
 
----
+## Features
 
-# 1. Core Idea
+### Natural-language transaction input
 
-The application allows users to manually track and analyze their personal finances.
+Describe a transaction instead of completing every field manually:
 
-Unlike traditional finance applications, one of the primary input methods is natural language.
+> Yesterday I spent 24.50 EUR on dinner at Bella Italia.
 
-For example:
+Jev checks whether the input describes a transaction and classifies its category and type. A local LLM extracts the amount, currency, date, merchant and a short description into Pydantic models. Relative dates are resolved against the current date in `Europe/Berlin`.
 
-> "I spent 18.20 EUR on groceries yesterday."
+The result is a **draft**, not an automatic database write. The user reviews and can edit the form, completes missing fields, and explicitly confirms the save. Inputs below the relevance threshold return an empty draft.
 
-The system should transform the input into structured financial data:
+![AI Input: describe a transaction, review the recognized fields and save](docs/assets/ai-input.gif)
 
-```json
-{
-  "type": "expense",
-  "amount": 18.20,
-  "currency": "EUR",
-  "category": "groceries",
-  "date": "2026-10-06",
-  "description": "Groceries"
-}
-```
-
-Another example:
-
-> "I received my salary today, 3200 EUR."
-
-may become:
-
-```json
-{
-  "type": "income",
-  "amount": 3200,
-  "currency": "EUR",
-  "category": "salary",
-  "date": "2026-10-07"
-}
-```
-
-The extracted information should be:
-
-```text
-Natural-language input
-        ↓
-Structured extraction
-        ↓
-Schema validation
-        ↓
-Business validation
-        ↓
-Database
-```
-
-Traditional forms should also be available as an alternative input mechanism and as a way to correct AI-generated results.
-
----
-
-# 2. Product Scope and Assumptions
-
-This project does **not** currently assume direct integration with:
-
-- bank accounts,
-- PSD2 / Open Banking,
-- Apple Wallet,
-- Google Wallet,
-- credit cards,
-- payment providers.
-
-Financial information is primarily provided manually by the user.
-
-The application should therefore never assume knowledge that the user has not provided.
-
-For example:
-
-> "I spent 40 EUR on groceries."
-
-The application may know:
-
-```text
-amount = 40 EUR
-category = groceries
-```
-
-but it must not invent:
-
-```text
-merchant = Lidl
-```
-
-unless the user explicitly provided the merchant.
-
-Unknown data should remain:
-
-```text
-NULL
-```
-
-rather than being inferred without sufficient evidence.
-
----
-
-# 3. Main System Principle
-
-The application separates four different types of information:
-
-```text
-Known data
-Derived data
-Predicted data
-Generated explanations
-```
-
-Example:
-
-```text
-User input:
-"I spent 50 EUR on groceries."
-
-Known:
-amount = 50 EUR
-category = groceries
-
-Unknown:
-merchant
-
-Derived:
-monthly grocery spending = 312 EUR
-
-Predicted:
-month-end grocery spending = 480 EUR
-
-Generated explanation:
-"Your grocery spending is currently above your recent average."
-```
-
-These concepts must not be mixed.
-
-The system should never present model predictions or LLM-generated explanations as confirmed financial facts.
-
----
-
-# 4. Financial Data Input
-
-The application may support three input mechanisms.
-
-## Natural-Language Input
-
-The main AI-oriented input method.
-
-Example:
-
-```text
-"I spent 24 EUR on dinner yesterday."
-```
-
-The system should identify the user's intent and extract structured information.
-
-Supported intents may include:
-
-```text
-transaction
-income
-recurring_payment
-budget
-savings_goal
-```
-
-Example:
-
-```text
-"Netflix costs me 13.99 EUR every month."
-```
-
-may create a recurring payment.
-
-Example:
-
-```text
-"I want to spend at most 400 EUR per month on groceries."
-```
-
-may create a budget.
-
-Example:
-
-```text
-"I want to save 5000 EUR for a vacation."
-```
-
-may create a savings goal.
-
----
-
-## Manual Forms
-
-Users should also be able to manually:
-
-- create transactions,
-- edit transactions,
-- create budgets,
-- create recurring payments,
-- create savings goals.
-
-Forms act as:
-
-- an alternative to AI input,
-- a correction mechanism,
-- a fallback when the AI cannot confidently understand input.
-
----
-
-## CSV Import
-
-CSV import may eventually be supported as an optional bulk-data feature.
-
-This does not require integration with a real bank.
-
-CSV files may contain:
-
-- synthetic data,
-- public datasets,
-- manually prepared transactions.
-
-CSV import is optional and is not a core requirement of the project.
-
----
-
-# 5. Feature Stack
-
-The planned system is divided into the following areas:
-
-```text
-PERSONAL FINANCE AI
-│
-├── Finance
-│   ├── Transactions
-│   ├── Categories
-│   ├── Budgets
-│   ├── Savings Goals
-│   └── Recurring Payments
-│
-├── Analytics
-│   ├── Cash Flow
-│   ├── Spending Trends
-│   ├── Category Analysis
-│   └── Financial KPIs
-│
-├── ML
-│   ├── Spending Forecasting
-│   └── Anomaly Detection
-│
-├── AI
-│   ├── Structured Financial Input
-│   ├── Financial Copilot
-│   └── Automated Insights
-│
-├── Agent Infrastructure
-│   └── AI Harness
-│
-└── Simulation
-    └── What-if Scenarios
-```
-
----
-
-# 6. Finance Features
-
-## Transactions
-
-Transactions represent individual financial events.
-
-Main transaction types:
-
-```text
-expense
-income
-```
-
-A transaction may contain:
-
-```text
-amount
-currency
-category
-date
-description
-optional merchant
-```
-
-Merchant information should only be stored when explicitly provided or reliably available.
-
-Transactions are one of the main sources of truth for the system.
-
----
-
-## Categories
-
-Transactions are organized into financial categories.
-
-Example categories:
-
-```text
-Groceries
-Restaurants
-Transport
-Housing
-Entertainment
-Shopping
-Health
-Subscriptions
-Salary
-Other
-```
-
-Categories are used by:
-
-- analytics,
-- budgets,
-- forecasting,
-- anomaly detection,
-- financial insights.
-
----
-
-## Budgets
-
-Users can define spending limits.
-
-Example:
-
-```text
-Groceries
-
-Monthly budget:
-500 EUR
-```
-
-The system compares actual transaction data against the configured limit.
-
-Example:
-
-```text
-Budget:      500 EUR
-Spent:       312 EUR
-Remaining:   188 EUR
-
-████████████░░░░░░░
-62%
-```
-
-Values such as:
-
-```text
-spent
-remaining
-percentage_used
-```
-
-should normally be derived dynamically from transactions instead of stored as independent financial facts.
-
----
-
-## Savings Goals
-
-Users may define financial goals.
-
-Example:
-
-```text
-Emergency Fund
-
-Target:
-10,000 EUR
-
-Current:
-6,200 EUR
-
-Target date:
-December 2027
-```
-
-Savings goals may later interact with:
-
-- forecasting,
-- what-if simulations,
-- automated insights.
-
----
-
-## Recurring Payments
-
-Recurring payments are explicitly declared by the user.
-
-Example:
-
-```text
-Netflix
-13.99 EUR
-monthly
-payment day: 15
-```
-
-Because the application does not automatically observe bank accounts, it must not claim that it detected a subscription unless enough information exists.
-
-Recurring payments can be used by:
-
-- forecasting,
-- cash-flow analysis,
-- upcoming-payment views,
-- simulations.
-
----
-
-# 7. Analytics
-
-Analytics should primarily rely on deterministic calculations and statistics.
-
-LLMs should not be responsible for calculating financial metrics.
-
----
-
-## Cash Flow
-
-Cash flow represents the relationship between income and expenses.
-
-```text
-cash_flow = income - expenses
-```
-
-The dashboard should support multiple periods:
-
-```text
-week
-month
-quarter
-year
-custom range
-```
-
----
-
-## Spending Trends
-
-The application analyzes how user spending changes over time.
-
-Examples:
-
-```text
-Restaurant spending increased during the last three months.
-
-Transport spending decreased compared with the previous month.
-
-Total spending is trending upward.
-```
-
-Trend calculations should come from deterministic or statistical components.
-
-An LLM may explain the result but should not calculate it independently.
-
----
-
-## Category Analysis
-
-The application analyzes spending distribution between categories.
-
-Example:
-
-```text
-Groceries        28%
-Housing          25%
-Transport        14%
-Entertainment    10%
-Other            23%
-```
-
-Users should be able to compare category spending across different periods.
-
----
-
-## Financial KPIs
-
-The dashboard may expose metrics such as:
-
-```text
-Total income
-Total expenses
-Net cash flow
-Savings
-Savings rate
-Average monthly spending
-Budget utilization
-Largest spending category
-```
-
-These values should be calculated by backend analytics.
-
----
-
-# 8. Machine Learning
-
-Machine learning should only be used where it provides measurable value.
-
-The project should avoid using ML simply to claim that ML is present.
-
-Two main ML problems are planned:
-
-```text
-Spending Forecasting
-Anomaly Detection
-```
-
----
-
-# 9. Spending Forecasting
-
-The system should predict future spending based on historical behavior.
-
-Example:
-
-```text
-Groceries
-
-Budget:              500 EUR
-Spent so far:         312 EUR
-Predicted month-end:  548 EUR
-
-Expected difference:
-+48 EUR
-```
-
-Possible features:
-
-```text
-historical spending
-category
-day of month
-day of week
-month
-recurring payments
-income
-recent spending velocity
-```
-
-Potential approaches:
-
-```text
-Statistical baseline
-Linear Regression
-Random Forest
-XGBoost
-LightGBM
-Time-series models
-```
-
-Model choice should be based on experiments rather than predetermined.
-
-The ML model must be compared against a simple baseline.
-
-Evaluation may include:
-
-```text
-MAE
-RMSE
-MAPE
-time-series backtesting
-```
-
-Cold-start behavior should also be considered because new users will initially have very little financial history.
-
-Synthetic or public data may therefore be used during model experimentation and training.
-
----
-
-# 10. Anomaly Detection
-
-The application should identify transactions that differ significantly from the user's historical behavior.
-
-Example:
-
-```text
-Typical restaurant transaction:
-20-50 EUR
-
-New transaction:
-247 EUR
-
-Anomaly score:
-0.91
-
-Result:
-Potential unusual expense
-```
-
-Potential approaches:
-
-```text
-statistical thresholds
-z-score
-IQR
-Isolation Forest
-Local Outlier Factor
-Autoencoder
-```
-
-The final solution should be chosen experimentally.
-
-Possible features:
-
-```text
-amount
-category
-time
-historical category behavior
-relative amount
-transaction frequency
-```
-
-The system should avoid simply treating every large transaction as anomalous.
-
-Anomaly results should remain model outputs rather than confirmed financial facts.
-
----
-
-# 11. Structured Financial Input
-
-AI is responsible for transforming natural-language input into structured financial data.
-
-Example:
-
-```text
-"I spent 27 EUR on dinner yesterday."
-```
-
-may become:
-
-```json
-{
-  "intent": "transaction",
-  "type": "expense",
-  "amount": 27,
-  "currency": "EUR",
-  "category": "restaurants",
-  "date": "resolved-date"
-}
-```
-
-The project currently plans to use Jev and/or an LLM for this type of extraction rather than training a dedicated ML classifier.
-
-Structured output must always go through validation before persistence.
-
-Conceptually:
-
-```text
-Natural language
-      ↓
-LLM / Jev
-      ↓
-Structured schema
-      ↓
-Validation
-      ↓
-Business rules
-      ↓
-Database
-```
-
----
-
-# 12. Financial Copilot
-
-The Financial Copilot is an AI agent that allows users to query their financial information through natural language.
-
-Example:
-
-> "Why did I spend more money this month?"
-
-The model should not receive unrestricted database access.
-
-Instead, the agent should interact with controlled tools.
-
-Conceptually:
-
-```text
-User
-  │
-  ▼
-Financial Copilot
-  │
-  ▼
-AI Harness
-  │
-  ├── get_transactions()
-  ├── calculate_spending()
-  ├── compare_periods()
-  ├── get_category_breakdown()
-  ├── get_budget_status()
-  ├── get_financial_kpis()
-  ├── predict_spending()
-  ├── get_anomalies()
-  └── run_what_if_scenario()
-  │
-  ▼
-Structured results
-  │
-  ▼
-LLM
-  │
-  ▼
-Natural-language explanation
-```
-
-The LLM should primarily reason over verified structured results.
-
-It should not invent financial values.
-
----
-
-# 13. Automated Insights
-
-The system may automatically identify noteworthy changes or patterns.
-
-Examples:
-
-```text
-Restaurant spending increased 24% compared with last month.
-
-You have used 87% of your entertainment budget.
-
-Your current spending trajectory suggests that you may exceed
-your groceries budget by approximately 48 EUR.
-
-A 247 EUR restaurant transaction is unusually high compared
-with your historical spending.
-```
-
-The preferred architecture is:
-
-```text
-Database / Analytics / ML
-            ↓
-     structured result
-            ↓
-      Insights Agent
-            ↓
-        AI Harness
-            ↓
-     LLM explanation
-```
-
-rather than:
-
-```text
-raw transactions
-       ↓
-LLM guesses patterns
-```
-
----
-
-# 14. What-if Simulation
-
-Users should be able to simulate financial decisions without modifying real financial records.
-
-Example:
-
-> "What if I reduce restaurant spending by 100 EUR per month?"
-
-Possible result:
-
-```text
-Current expected savings after 12 months:
-3,800 EUR
-
-Scenario:
-Reduce restaurant spending by 100 EUR/month
-
-Expected savings:
-5,000 EUR
-
-Difference:
-+1,200 EUR
-```
-
-The simulation engine should primarily use:
-
-- deterministic calculations,
-- financial business rules,
-- statistics,
-- optionally forecasting models.
-
-The LLM may act as the natural-language interface to the simulator.
-
----
-
-# 15. AI Harness
-
-A central AI Engineering component of the project is a custom lightweight **AI Harness**.
-
-The harness is infrastructure surrounding the agents and LLM.
-
-Agents define **what they want to achieve**.
-
-The harness controls **how agent execution happens**.
-
-Conceptually:
-
-```text
-                  Agent
-                    │
-                    ▼
-          ┌──────────────────┐
-          │    AI Harness    │
-          │                  │
-          │ Runtime          │
-          │ Tool Registry    │
-          │ Tool Executor    │
-          │ Context          │
-          │ State            │
-          │ Permissions      │
-          │ Retries          │
-          │ Tracing          │
-          │ Evaluation hooks │
-          └────────┬─────────┘
-                   │
-          ┌────────┼───────────┐
-          ▼        ▼           ▼
-         DB       ML       Statistics
-```
-
-The goal is not to build a general-purpose competitor to LangGraph or other agent frameworks.
-
-The harness should remain small, understandable, testable, and directly useful to this application.
-
----
-
-# 16. Harness Responsibilities
-
-## Agent Runtime
-
-The runtime controls the agent execution loop.
-
-Typical execution:
-
-```text
-User request
-    ↓
-LLM call
-    ↓
-Tool request
-    ↓
-Tool execution
-    ↓
-Tool result
-    ↓
-LLM call
-    ↓
-...
-    ↓
-Final answer
-```
-
-The runtime should support concepts such as:
-
-```text
-max_steps
-run timeout
-termination conditions
-tool call limits
-controlled errors
-```
-
-This prevents agents from executing indefinitely.
-
----
-
-## Tool Registry
-
-Tools exposed to agents should be registered centrally.
-
-Example tools:
-
-```text
-get_transactions
-get_category_spending
-compare_periods
-get_budget_status
-get_financial_kpis
-predict_spending
-detect_anomalies
-run_what_if_scenario
-```
-
-A tool definition may include:
-
-```text
-name
-description
-input schema
-output schema
-permissions
-handler
-timeout
-```
-
-Agents should only see tools they are allowed to use.
-
----
-
-## Tool Executor
-
-The executor is responsible for safely executing tool calls.
-
-Responsibilities may include:
+### Transactions and manual entry
 
-```text
-argument validation
-schema validation
-authorization
-execution
-timeouts
-error handling
-response normalization
-tracing
-```
-
-The LLM must never directly execute database queries.
-
----
-
-## Context Management
-
-The harness controls what information is sent to the model.
-
-Possible context:
-
-```text
-system instructions
-conversation history
-current request
-tool definitions
-tool results
-relevant financial state
-```
-
-The harness should avoid blindly sending:
-
-```text
-entire database
-entire conversation history
-unnecessary previous tool outputs
-```
-
-Context management may later include:
-
-```text
-history truncation
-summarization
-token budgeting
-tool-result pruning
-```
-
----
-
-## State Management
-
-Every agent run should have structured state.
-
-Example:
-
-```text
-run_id
-trace_id
-user_id
-agent
-current_step
-tool_calls
-conversation_id
-created_at
-```
-
-Conversation state and temporary execution state should remain conceptually separate.
-
----
-
-## Permissions and Security
-
-The harness should enforce access control.
-
-For example, an agent tool may expose:
-
-```text
-get_transactions(start_date, end_date)
-```
-
-rather than:
-
-```text
-get_transactions(user_id, start_date, end_date)
-```
-
-The authenticated `user_id` should be injected internally by trusted backend code.
-
-The LLM should not be able to request arbitrary user IDs.
-
-Conceptually:
-
-```text
-JWT / Session
-     ↓
-Authenticated User
-     ↓
-Harness Context
-     ↓
-Tool Executor
-     ↓
-Database
-```
-
----
-
-## Retries and Error Handling
-
-The harness should distinguish between:
-
-```text
-temporary failure
-invalid arguments
-tool failure
-model failure
-authorization failure
-business validation failure
-```
-
-Retry should only be used when appropriate.
-
-Example:
-
-```text
-Tool timeout
-     ↓
-Retry once
-     ↓
-Still fails
-     ↓
-Controlled error returned to agent
-```
-
-Infinite retries must not be allowed.
-
----
-
-## Tracing and Observability
-
-Each agent execution should produce a trace.
-
-Example:
-
-```text
-trace_id: abc123
-
-User request
-    ↓
-LLM call
-    latency: 680 ms
-    input tokens: 620
-    output tokens: 140
-    ↓
-Tool call
-    get_category_spending
-    ↓
-Tool execution
-    latency: 31 ms
-    ↓
-Tool result
-    ↓
-LLM call
-    latency: 430 ms
-    ↓
-Final response
-
-Total latency: 1.14 s
-LLM calls: 2
-Tool calls: 1
-Total tokens: 1,420
-```
-
-Useful metrics include:
-
-```text
-latency
-token usage
-estimated cost
-number of model calls
-number of tool calls
-tool failures
-retries
-agent steps
-```
-
----
-
-# 17. Agent Evaluation
-
-Agent behavior should be evaluated rather than judged only manually.
-
-Example evaluation case:
-
-```text
-Question:
-"How much did I spend on groceries last month?"
-
-Expected tool:
-get_category_spending
-
-Expected arguments:
-category = groceries
-period = previous_month
-
-Must not:
-invent transaction values
-```
-
-Potential metrics:
-
-```text
-tool selection accuracy
-tool argument accuracy
-answer correctness
-hallucination rate
-average number of steps
-latency
-token usage
-cost
-task completion rate
-```
-
-Evaluation should include:
-
-```text
-happy paths
-ambiguous requests
-missing information
-invalid inputs
-tool failures
-incorrect tool arguments
-adversarial inputs
-```
-
-Agent evaluation belongs to the harness/evaluation layer rather than the frontend.
-
----
-
-# 18. Agents
-
-The harness may support multiple application-specific agents.
-
-Potential agents:
-
-```text
-Financial Copilot Agent
-Automated Insights Agent
-Input / Classification Agent
-```
-
-Not every feature needs to become a separate agent.
-
-Agents should only be introduced when they provide a meaningful separation of responsibility.
-
----
-
-## Financial Copilot Agent
-
-Responsible for answering user questions about their finances.
-
-Typical tools:
-
-```text
-get_transactions
-compare_periods
-get_category_spending
-get_budget_status
-get_financial_kpis
-predict_spending
-get_anomalies
-run_what_if_scenario
-```
-
----
-
-## Automated Insights Agent
-
-Responsible for turning structured financial signals into understandable insights.
-
-Input may come from:
-
-```text
-analytics
-statistics
-forecasting
-anomaly detection
-budget monitoring
-```
-
-It should not independently calculate financial values using the LLM.
-
----
-
-## Input Agent
-
-An optional agent responsible for interpreting natural-language financial commands.
-
-Examples:
-
-```text
-Add transaction
-Create budget
-Create recurring payment
-Create savings goal
-```
-
-This may remain a simpler structured-extraction pipeline rather than a full autonomous agent if an agent architecture is unnecessary.
-
----
-
-# 19. Intelligence Architecture
-
-The planned intelligence layer is approximately:
-
-```text
-intelligence/
-│
-├── harness/
-│   ├── runtime.py
-│   ├── context.py
-│   ├── state.py
-│   ├── tool_registry.py
-│   ├── tool_executor.py
-│   ├── permissions.py
-│   ├── tracing.py
-│   └── errors.py
-│
-├── agents/
-│   ├── financial_copilot.py
-│   ├── insights_agent.py
-│   └── subagents/
-│
-├── tools/
-│   ├── transactions.py
-│   ├── budgets.py
-│   ├── analytics.py
-│   ├── forecasting.py
-│   ├── anomalies.py
-│   └── simulation.py
-│
-├── ml/
-│   ├── models/
-│   ├── training/
-│   └── artifacts/
-│
-├── statistics/
-│
-├── pipelines/
-│   ├── preprocessing/
-│   └── inference/
-│
-├── prompts/
-│
-├── evaluation/
-│   ├── agents/
-│   ├── ml/
-│   └── extraction/
-│
-├── experiments/
-│
-└── utils/
-```
-
----
-
-# 20. Responsibility Boundaries
-
-## `harness/`
-
-Contains reusable infrastructure controlling agent execution.
-
-It should not contain finance-specific business logic.
+- Create transactions manually or from an AI-generated draft.
+- Edit and delete existing transactions.
+- Browse the 50 most recent transactions or filter by year, month and category.
+- Record positive amounts with a separate transaction type and three-letter currency code.
+- Keep merchant names, descriptions and transaction dates alongside each record.
 
-Examples:
+The schema currently accepts `income`, `expense` and `transfer`. Transfers are excluded from income/expense analytics. The supplied synthetic dataset contains only income and expenses.
 
-```text
-agent execution loop
-tool execution
-context handling
-state
-permissions
-retries
-tracing
-```
-
----
-
-## `agents/`
-
-Contains application-specific agent behavior.
-
-Agents decide:
-
-```text
-what information is needed
-which tools should be used
-when enough information has been collected
-how structured results should be interpreted
-```
-
-Agents should not implement database queries or ML algorithms directly.
-
----
-
-## `tools/`
+### Overview and monthly analysis
 
-Contains controlled capabilities available to agents.
+The Overview page shows the current month; Analysis lets the user select another month. Both show income, expenses, monthly balance, net Savings transfers and the remaining budget after Savings. Category charts and average daily expenses provide more detail. The Overview also includes a historical chart with 6-, 12-, 24- and 60-month views.
 
-Tools provide a stable boundary between the LLM and application internals.
-
-A tool may internally use:
-
-```text
-database
-backend services
-statistics
-ML models
-Jev
-deterministic logic
-```
+These values come from deterministic Python/SQL calculations, not LLM-generated arithmetic.
 
-Example:
+![Overview and Analysis: inspect monthly cash flow and category spending](docs/assets/overview.gif)
 
-```text
-Financial Copilot
-       ↓
-predict_spending()
-       ↓
-forecasting inference pipeline
-       ↓
-ML model
-```
+### Savings and goals
 
-The agent does not need to know how the model is implemented.
+Record a Savings deposit from Overview or Analysis, then manage the accumulated pool on the Savings page:
 
----
+- See total Savings, money assigned to goals and the unassigned amount.
+- Create a goal with a target amount and target date.
+- Assign existing Savings to a goal or release money back to the available pool.
+- Follow goal progress and browse paginated Savings movements.
 
-## `ml/`
+Assigning money to a goal reserves existing Savings; it does not create another expense or another deposit. Allocation limits and goal updates are handled within database transactions. The API currently creates deposits; withdrawal totals are supported in calculations, but a withdrawal-entry flow is not implemented.
 
-Contains machine-learning-related code.
+### Financial Copilot
 
-Example structure:
+Ask questions such as:
 
 ```text
-ml/
-├── models/
-├── training/
-└── artifacts/
+How much did I spend on groceries in August 2025?
+Show my five most recent expenses from September 2026.
+Compare my income and expenses in July 2026 and August 2026.
+Search the web for the latest euro-area inflation rate and cite official sources.
 ```
 
-Artifacts may contain:
+The copilot selects from four registered tools, uses their results to answer, and supports follow-up questions within the conversation. Ambiguous requests can be routed to clarification; unrelated requests receive a brief scope response.
 
-```text
-trained model weights
-scalers
-encoders
-model configuration
-metadata
-```
+The chat renders Markdown and tables in a fixed-height conversation panel. The beginning of a new answer stays visible, with history scrolling inside the panel. Starting a new chat or leaving the page resets the browser's conversation state.
 
----
+![Financial Copilot: ask questions about recorded finances and follow up](docs/assets/copilot.gif)
 
-## `statistics/`
+The recordings use fictional demo data. Their figures may include manual demo entries in addition to the checked-in dataset. [Media details](docs/assets/README.md).
 
-Contains statistical and deterministic analytical methods.
+## Financial rules
 
-Examples:
+Mamona tracks monthly budgets rather than a bank-account balance. Each month is independent; unallocated money is not carried forward as next month's income. Savings, however, accumulate across months.
 
 ```text
-moving averages
-z-scores
-IQR
-trend calculations
-descriptive statistics
-period comparisons
-spending distributions
+Monthly balance          = income − expenses
+Net Savings              = Savings deposits − Savings withdrawals
+Remaining monthly budget = monthly balance − net Savings
+Available Savings        = total Savings − amounts assigned to goals
 ```
 
----
+Savings deposits are not expenses, and the remaining monthly budget can be negative. A deposit can be recorded during the month without being limited to the current surplus.
 
-## `pipelines/`
-
-Contains reusable preprocessing and inference pipelines.
-
-Examples:
-
-```text
-transaction preprocessing
-forecast preprocessing
-forecast inference
-anomaly inference
-```
+Analytics use the user's configured currency and exclude other currencies, transaction transfers and future-dated entries. Other-currency transactions may still be stored and retrieved; automatic conversion is not implemented. Current-month statistics stop at today in `Europe/Berlin`.
 
----
+## Tech stack and models
 
-## `prompts/`
+| Area | Technology and role |
+| --- | --- |
+| Backend | Python 3.11+, FastAPI and Pydantic request/response validation |
+| Persistence | PostgreSQL 17, SQLAlchemy, psycopg and Alembic migrations |
+| Frontend | React 19, TypeScript 6, Vite 8, React Router and Material UI |
+| Agent runtime | LangChain `create_agent`, structured tools and LangGraph workflow/checkpointing |
+| Local inference | Ollama with `qwen3.5:9b` |
+| Classification and routing | Jev through `typesafe-sdk`, using `Choice` and `Noul` |
+| External retrieval | Tavily web search |
+| Observability / LLMOps | LangSmith tracing for request flow, model calls, tool inputs/outputs, timing and failures |
+| Evaluation | Python callback collector, deterministic tool checks, Jev answer judging and manual review |
+| Development | uv and `uv.lock`, npm and `package-lock.json`, Docker Compose, ESLint and unittest |
 
-Contains:
+LangSmith is the project's tracing and debugging layer. The evaluation runner and result files live in this repository; a hosted evaluation pipeline, model registry and automated deployment pipeline are not implemented.
 
-```text
-system prompts
-agent instructions
-structured extraction prompts
-insight-generation prompts
-```
+### Inference configuration
 
-Prompts should be version-controlled.
+| Component | Model / service | Context window | Temperature | Reasoning |
+| --- | --- | --- | --- | --- |
+| Financial Copilot | `qwen3.5:9b` via Ollama | 16,384 | 0.0 | Enabled |
+| Transaction detail extraction | `qwen3.5:9b` via Ollama | 4,096 | 0.0 | Disabled |
+| Clarification / out-of-scope responses | `qwen3.5:9b` via Ollama | 4,096 | 0.0 | Disabled |
+| Routing, transaction classification and evaluation judging | Jev API | Service-managed | — | — |
 
----
+The development machine is a MacBook Pro with an M5 Pro and 48 GB RAM. This is a reference environment, not a minimum hardware specification. Local response time depends on hardware, model loading, context length and generated output.
 
-## `evaluation/`
+## Architecture and AI harness
 
-Contains evaluation logic for:
+### Application boundaries
 
-```text
-ML models
-agent behavior
-tool selection
-tool arguments
-LLM outputs
-structured extraction
+```mermaid
+flowchart LR
+    UI[React application] --> API[FastAPI]
+    API --> Services[Finance services]
+    Services --> DB[(PostgreSQL)]
+    API --> Draft[AI transaction draft]
+    Draft --> Jev[Jev classification]
+    Draft --> Ollama[Ollama extraction]
+    API --> Harness[LangGraph Copilot workflow]
+    Harness --> Tools[Registered tools]
+    Tools --> Services
+    Tools --> Web[Tavily web search]
+    Harness -. Traces .-> Smith[LangSmith]
 ```
-
----
-
-## `experiments/`
-
-Contains experimental work that is not yet part of the application.
-
-Experiments should not become production dependencies accidentally.
 
----
+The UI calls FastAPI. Finance services validate business rules and access PostgreSQL through SQLAlchemy. Agent database tools wrap those same services, so the application and copilot share the calculation logic.
 
-# 21. High-Level System Architecture
+### Copilot workflow
 
-Conceptually:
-
-```text
-                   ┌──────────────────────┐
-                   │       Frontend       │
-                   │                      │
-                   │ Dashboard / Chat /   │
-                   │ Forms / Analytics    │
-                   └──────────┬───────────┘
-                              │
-                              ▼
-                   ┌──────────────────────┐
-                   │       FastAPI        │
-                   │                      │
-                   │ Auth / Validation /  │
-                   │ Business Logic       │
-                   └───────┬───────┬──────┘
-                           │       │
-                           │       │
-                           ▼       ▼
-                  ┌───────────┐   ┌────────────────────┐
-                  │PostgreSQL │   │   Intelligence     │
-                  └───────────┘   │                    │
-                                  │   AI Harness       │
-                                  └─────────┬──────────┘
-                                            │
-                              ┌─────────────┼──────────────┐
-                              ▼             ▼              ▼
-                           Agents         Tools           Evals
-                                            │
-                              ┌─────────────┼──────────────┐
-                              ▼             ▼              ▼
-                             DB             ML         Statistics
-                                            │
-                                      ┌─────┴─────┐
-                                      ▼           ▼
-                                 Forecasting   Anomalies
+```mermaid
+flowchart TD
+    Request[Question and optional thread UUID] --> Context[Server user context and conversation history]
+    Context --> Router[Jev router]
+    Router -->|financial| Agent[Financial Copilot]
+    Router -->|clarification| Clarify[Single model response]
+    Router -->|out_of_scope| Scope[Single model response]
+    Agent --> Model[Local model]
+    Model -->|tool calls| Execute[LangChain tool execution]
+    Execute -->|tool results| Model
+    Model -->|final answer| Response[Route, thread UUID and answer]
+    Clarify --> Response
+    Scope --> Response
 ```
-
----
-
-# 22. Agent Execution Architecture
 
-A typical Financial Copilot request should follow this path:
+The harness is a small application layer built on LangGraph and LangChain. Their runtime supplies the agent loop and tool execution; this project configures the routing, context, tool boundaries, memory, tracing and API integration.
 
-```text
-User
- ↓
-Frontend
- ↓
-FastAPI
- ↓
-Authenticated request context
- ↓
-Financial Copilot Agent
- ↓
-AI Harness
- ↓
-LLM
- ↓
-Tool selection
- ↓
-Harness validates call
- ↓
-Tool Executor
- ↓
-Backend / DB / ML / Statistics
- ↓
-Structured tool result
- ↓
-Harness updates context
- ↓
-LLM
- ↓
-Final answer
- ↓
-Trace + evaluation data
-```
+| Responsibility | Current implementation |
+| --- | --- |
+| Routing | `financial`, `clarification` or `out_of_scope`, with conversation history available to the router |
+| Identity context | Server-provided `UserContext` accessed inside tools through `ToolRuntime`; the model does not supply the user ID |
+| Tool boundary | Four explicitly registered tools; database tools expose service functions rather than arbitrary SQL |
+| Argument validation | Typed tool schemas plus service-level validation |
+| Financial authority | Monthly totals and category aggregates calculated by application code |
+| Date context | Current Berlin date supplied dynamically on financial-node invocation |
+| Memory | `InMemorySaver`, keyed by user ID and thread UUID |
+| Execution limit | `recursion_limit=30`, with API handling for a reached graph limit; not a dedicated tool-call or wall-clock budget |
+| Errors | Validation and selected workflow errors mapped to API responses; comprehensive provider timeout/retry policies remain future work |
+| Tracing | A `financial_copilot.request` root trace with workflow, model and tool activity |
 
-This means the LLM does not directly control infrastructure.
+The financial node retains the final assistant answer in the outer conversation history. Detailed tool activity remains visible in traces and evaluation callbacks.
 
-The harness acts as the execution boundary between the model and the application.
+### Registered tools
 
----
+| Tool | Purpose | Important boundary |
+| --- | --- | --- |
+| `get_monthly_summary(year, month)` | Income, expenses, Savings, remaining budget and complete category totals for one month | Uses the user's currency and reports its date scope; comparisons need a call per month |
+| `search_transactions(start_date, end_date, …)` | Individual records, optionally filtered by type and category | Maximum 50 records per page; includes `has_more` and `next_offset`; may include other currencies |
+| `list_categories()` | Category names and UUIDs | Resolves identifiers for transaction filtering; unnecessary for category totals already in a summary |
+| `web_search(query)` | Public financial and economic information | Returns titles, URLs and excerpts; source recency and release status still need verification |
 
-# 23. Database Direction
+The Copilot has no write tool and no arbitrary-SQL execution tool. AI-assisted transaction entry is a separate draft-and-confirm flow.
 
-The database is centered around the user.
+Prompt instructions ask the agent to keep private data out of web queries and treat retrieved text as evidence rather than instructions. These are behavioral controls, not a complete data-loss-prevention or prompt-injection defense.
 
-Conceptually:
+### Observability and data flow
 
-```text
-users
-│
-├── transactions
-├── budgets
-├── savings_goals
-├── recurring_payments
-├── forecasts
-├── anomaly_results
-└── ai_conversations
-      └── ai_messages
-```
+With tracing enabled, LangSmith helps inspect routing decisions, tool arguments/results, model activity, latency and errors. This made it possible to investigate unexpected retrieval choices and distinguish tool execution from answer-quality failures.
 
-The exact schema should evolve alongside implementation.
+Ollama inference runs locally, but the full application is not offline: Jev receives classification inputs and router history, Tavily handles public web queries, and enabled LangSmith tracing can capture conversation and tool content. The evaluation judge also receives answers and recorded tool evidence. Demonstrations and checked-in evaluation artifacts use synthetic data.
 
-Financial values that can be derived from primary data should generally not be duplicated.
+## Evaluation
 
-Examples:
+I ran three iterations of the same ten-question evaluation on October 31, 2026, using `qwen3.5:9b`, a 16,384-token context window, temperature 0.0 and reasoning enabled.
 
-```text
-monthly_spending
-budget_used
-category_total
-cash_flow
-```
+The dataset covers monthly totals, category totals/rankings, transaction retrieval, Savings semantics, month comparisons, clarification, out-of-scope requests and current-information search.
 
-should normally be calculated from transactions.
+The evaluator combines:
 
----
+1. **Deterministic tool checks:** compare executed tool names and call counts with expected calls.
+2. **Jev judging:** rate answer correctness, completeness and relevance against expected context and captured tool evidence.
+3. **Manual review:** inspect answers and traces, recalculate values where needed, and check whether judge labels are warranted.
 
-# 24. Data Reliability Rules
+| Run | Main changes | `full answer` | `partly answer` | `wrong answer` | Exact tool match |
+| --- | --- | --- | --- | --- | --- |
+| 001 | Initial baseline | 8/10 | 1/10 | 1/10 | 9/10 |
+| 002 | Revised system prompt, tool descriptions and date context | 8/10 | 2/10 | 0/10 | 10/10 |
+| 003 | More specific web-search and citation guidance | 9/10 | 1/10 | 0/10 | 10/10 |
 
-The project follows several reliability rules.
+All three runs recorded no case-level or tool errors. These are **judge ratings on a small development dataset, not a claim of 90% verified accuracy**.
 
-## Rule 1 — Never invent unknown financial facts
+### What the experiments showed
 
-If merchant information is unknown:
+- **A retrieval failure was corrected.** In `se-2`, the initial agent fetched raw grocery transactions and added an incorrect merchant breakdown. Later runs used `get_monthly_summary` and returned the correct EUR 652.33 total directly.
+- **A small regression was visible.** `se-4` temporarily omitted a pagination disclosure in run 002; run 003 restored it.
+- **The judge missed an internal contradiction.** In run 003, `se-6` showed the correct values `-432.51`, `0.00` and `-432.51`, but concluded that all three were identical. Jev still rated it `full answer`.
+- **Web verification remains a limitation.** `se-10` improved its citations but continued to overstate what excerpts established about release status and recency.
 
-```text
-merchant = NULL
-```
+One run per version cannot establish repeatability. Several prompts changed together, live web evidence varied, tool arguments are not automatically scored, and latency/cost were not recorded in these result files. These questions guided development rather than forming a held-out benchmark.
 
-not:
+| Experiment | Recorded results | Analysis |
+| --- | --- | --- |
+| 001 | [JSON](intelligence/evaluation/baseline_results_1.json) | [Findings](intelligence/evaluation/analysis_baseline_1.md) |
+| 002 | [JSON](intelligence/evaluation/baseline_results_2.json) | [Findings](intelligence/evaluation/analysis_baseline_2.md) |
+| 003 | [JSON](intelligence/evaluation/baseline_results_3.json) | [Findings](intelligence/evaluation/analysis_baseline_3.md) |
 
-```text
-merchant = guessed value
-```
+[Evaluation dataset](intelligence/evaluation/small_eval_dataset.json) · [Runner](intelligence/evaluation/small_evaluation.py) · [Agent prompt](intelligence/agents/prompts/financial_copilot_prompt.md)
 
----
+## Run locally
 
-## Rule 2 — LLMs do not calculate authoritative financial metrics
+### Prerequisites
 
-Bad:
+- Python 3.11+ and [uv](https://docs.astral.sh/uv/getting-started/installation/).
+- Node.js 22.12+ and npm; the current Vite version also supports Node.js 20.19+.
+- Docker with Docker Compose for PostgreSQL.
+- [Ollama](https://ollama.com/download), running locally with `qwen3.5:9b`.
+- A Typesafe/Jev API key and a Tavily API key. The current backend initializes the web-search client at startup, so configure both for the full application.
+- An optional LangSmith account/key for tracing.
 
-```text
-Transactions
-     ↓
-LLM
-     ↓
-"Your total spending was 812.44 EUR"
-```
+Docker Compose currently runs **PostgreSQL only**. The backend, frontend and Ollama run on the host.
 
-Preferred:
+### 1. Install dependencies
 
-```text
-Transactions
-     ↓
-SQL / analytics
-     ↓
-812.44 EUR
-     ↓
-LLM
-     ↓
-Explanation
+```bash
+git clone https://github.com/simonadamm/mamona-finance-tracker.git
+cd mamona-finance-tracker
+uv sync --locked
+npm --prefix frontend ci
+cp .env.example .env
 ```
 
----
+### 2. Configure the environment
 
-## Rule 3 — Predictions are not facts
+Edit the root `.env`:
 
-Forecast:
+```dotenv
+DATABASE_URL=postgresql+psycopg://mamonaadmin:mamona123@127.0.0.1:5432/mamona
+TYPESAFE_API_KEY=your-typesafe-api-key
+TAVILY_API_KEY=your-tavily-api-key
 
-```text
-Predicted spending:
-548 EUR
+# Optional LangSmith tracing
+LANGSMITH_API_KEY=
+LANGSMITH_PROJECT=mamona-dev
+LANGSMITH_TRACING=false
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
 ```
 
-must be clearly distinguishable from:
-
-```text
-Actual spending:
-312 EUR
-```
+The database credentials match the local Compose configuration and are intended for local demonstration. `.env` files are ignored by Git; keep real credentials out of source files and media.
 
----
+For tracing, add a LangSmith key and set `LANGSMITH_TRACING=true`. Use the endpoint for the account's region: `https://api.smith.langchain.com` for US or `https://eu.api.smith.langchain.com` for EU. Restart the backend after changing environment settings.
 
-## Rule 4 — Tools are the boundary between agents and application data
+### 3. Start PostgreSQL and create the schema
 
-Agents should not receive unrestricted:
+From the repository root:
 
-```text
-database access
-filesystem access
-arbitrary Python execution
-user IDs
+```bash
+docker compose -f infrastructure/docker/compose.yaml up -d postgres
+docker compose -f infrastructure/docker/compose.yaml exec postgres pg_isready -U mamonaadmin -d mamona
+uv run alembic upgrade head
 ```
-
-without explicit architectural justification.
-
----
 
-## Rule 5 — Authenticated identity comes from trusted application state
+If PostgreSQL is still starting, repeat the readiness check before applying migrations.
 
-The LLM should not choose the active user.
+### 4. Load the demo workspace
 
-```text
-Authentication
-      ↓
-Backend
-      ↓
-Harness Context
-      ↓
-Tools
+```bash
+uv run python -m backend.app.db.seed_categories
+uv run python -m backend.app.db.seed_demo_user
+uv run python -m backend.app.db.seed_demo_history --end-date 2026-10-26
 ```
-
----
 
-# 25. Testing Strategy
+The fixed end date reproduces the checked-in synthetic snapshot: **1,312 transactions across 23 categories**, from April 26, 2025 through October 26, 2026, all in EUR with English labels. The first and last months are partial.
 
-The project should include several categories of tests.
+Re-running the history seed skips existing generated records and preserves manual transactions and edits. It does not create Savings deposits or goals. Record a deposit and create a goal through the UI to explore those features. Extra manual entries and Savings activity can make totals differ from the archived evaluation runs.
 
-## Backend
-
-```text
-unit tests
-integration tests
-API tests
-database tests
-authorization tests
-```
+To generate a rolling 18-month history ending today instead, omit `--end-date`. This produces a different snapshot and is not an exact reproduction of the checked-in CSV.
 
-## Tools
+[Demo dataset and export options](data/demo/README.md) · [CSV](data/demo/transactions.csv) · [Manifest](data/demo/manifest.json)
 
-```text
-input validation
-permissions
-correctness
-failure handling
-timeout behavior
-```
+### 5. Start Ollama and the backend
 
-## Harness
+With Ollama running:
 
-```text
-control-loop termination
-max-step handling
-tool execution
-retry logic
-error propagation
-context management
-permissions
-tracing
+```bash
+ollama pull qwen3.5:9b
+uv run uvicorn backend.app.main:app --reload
 ```
 
-## Agents
+If using Ollama's CLI without its desktop service, start `ollama serve` in another terminal first. Initial model loading can make the first AI request slower.
 
-```text
-tool selection
-argument generation
-task completion
-hallucination tests
-ambiguous inputs
-missing data
-failure recovery
-```
+### 6. Start the frontend
 
-## ML
+In another terminal:
 
-```text
-baseline comparison
-backtesting
-MAE
-RMSE
-MAPE
-anomaly evaluation
-false positives
-false negatives
+```bash
+cd frontend
+npm run dev
 ```
-
----
 
-# 26. Observability
+Open [http://localhost:5173](http://localhost:5173). Interactive API documentation is available at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
-The project should expose enough information to inspect AI behavior.
+The Vite development server proxies `/api` to port 8000. A separately hosted production frontend needs an equivalent API routing configuration; `npm run build` alone does not deploy the backend.
 
-Important observability dimensions:
+To stop the local database while retaining its data:
 
-```text
-agent runs
-LLM calls
-tool calls
-latency
-tokens
-cost
-errors
-retries
-ML model version
-prompt version
+```bash
+docker compose -f infrastructure/docker/compose.yaml stop postgres
 ```
-
-A development/debug interface may later show complete traces.
-
-Example:
-
-```text
-Trace #42
-
-User:
-"Why did I spend more in September?"
-
-Agent:
-FinancialCopilot
-
-Step 1:
-compare_periods()
-
-Step 2:
-get_category_spending()
-
-Step 3:
-get_anomalies()
-
-Final answer:
-...
-
-Latency:
-1.8 s
 
-Tool calls:
-3
+### Troubleshooting
 
-LLM calls:
-2
-```
+| Symptom | Check |
+| --- | --- |
+| Database connection refused | Docker service, readiness check, port 5432 and `DATABASE_URL` |
+| Empty transactions page | Migrations and demo seeds; select a seeded month on Analysis if the current month lies outside the snapshot |
+| AI model unavailable | Ollama is running and `qwen3.5:9b` has been pulled |
+| Missing API-key error at startup | Root `.env` includes Typesafe and Tavily credentials; restart after editing |
+| LangSmith returns 403 | API key permissions and US/EU endpoint match the workspace |
+| AI request takes longer than expected | Cold model loading, local hardware, context/output length; inspect traces before attributing the delay to a tool |
 
----
+## API overview
 
-# 27. AI Engineering Goals
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /categories` | List category names and UUIDs |
+| `GET /transactions` | Latest transactions or year/month/category filters |
+| `POST /transactions` | Create a confirmed transaction |
+| `PUT /transactions/{transaction_id}` | Edit a transaction |
+| `DELETE /transactions/{transaction_id}` | Delete a transaction |
+| `POST /transactions/draft` | Generate a reviewable AI draft |
+| `GET /analytics/monthly` | Deterministic monthly statistics |
+| `GET /analytics/history` | Monthly history, up to 60 months |
+| `GET /savings` | Total, assigned and available Savings |
+| `GET /savings/movements` | Paginated Savings history |
+| `POST /savings/deposits` | Record a Savings deposit |
+| `GET /saving-goals` / `POST /saving-goals` | List or create goals |
+| `POST /saving-goals/{goal_id}/assign` | Allocate existing Savings |
+| `POST /saving-goals/{goal_id}/release` | Return goal allocation to available Savings |
+| `POST /financial_copilot` | Ask a question; optionally continue a thread |
 
-The project aims to demonstrate competence in:
+Example Copilot request:
 
-```text
-LLM integration
-structured outputs
-agent orchestration
-agent runtime design
-tool calling
-tool execution
-context management
-state management
-AI permissions
-tracing
-observability
-agent evaluation
-prompt engineering
-ML training
-ML inference
-model evaluation
-forecasting
-anomaly detection
-statistical analysis
-data pipelines
-AI/backend integration
-human validation
-AI reliability
-Dockerized deployment
+```bash
+curl http://127.0.0.1:8000/financial_copilot \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"How much did I spend on groceries in August 2025?"}'
 ```
-
----
-
-# 28. Technology Selection Principle
 
-The project should not use AI unnecessarily.
+The response contains `thread_id`, `route` and `answer`. Reuse the returned UUID in a subsequent request's `thread_id` field to continue the conversation. Identity comes from the server's current demo-user dependency, not the request body.
 
-Use the simplest reliable solution.
+## Tests and evaluation commands
 
-Conceptually:
+Run the deterministic test suite without PostgreSQL or AI-provider calls:
 
-```text
-Can deterministic code solve the problem reliably?
-        │
-       YES
-        │
-        ▼
-Use deterministic code
-        │
-        NO
-        ▼
-Can statistics solve it?
-        │
-       YES
-        │
-        ▼
-Use statistics
-        │
-        NO
-        ▼
-Does it require prediction from data?
-        │
-       YES
-        │
-        ▼
-Use ML
-        │
-        NO
-        ▼
-Does it require language understanding,
-tool orchestration or reasoning?
-        │
-       YES
-        │
-        ▼
-Use LLM / Agent
+```bash
+uv run python -m unittest discover -s tests
 ```
-
-Examples:
-
-```text
-Monthly total
-→ SQL
 
-Savings rate
-→ deterministic calculation
+The current suite contains **21 tests**, covering Savings allocation/release rules, user/currency scope, summaries, dataset generation and non-destructive seeding. It uses isolated SQLite databases and omits PostgreSQL-specific checks in test copies of the tables; it does not replace PostgreSQL integration or concurrency testing.
 
-Spending trend
-→ statistics
+Check the frontend:
 
-Future spending
-→ ML forecasting
-
-Unusual transaction
-→ statistics / ML
-
-"Why did my spending increase?"
-→ agent + tools + LLM explanation
+```bash
+npm --prefix frontend run lint
+npm --prefix frontend run build
 ```
-
----
-
-# 29. Portfolio Scope
-
-This is a portfolio project.
-
-It does not need to solve every problem expected from a commercial fintech platform.
-
-Priority should be given to features that demonstrate:
-
-1. strong software architecture,
-2. meaningful AI usage,
-3. controlled agent execution,
-4. measurable ML performance,
-5. agent evaluation,
-6. observability,
-7. reliability,
-8. correct separation of AI and deterministic logic,
-9. production-style inference,
-10. good UX,
-11. clear technical decision-making.
 
-A smaller number of deeply implemented features is preferable to a large number of shallow features.
+Run the ten-case agent evaluation after configuring PostgreSQL, demo data, Ollama and provider credentials:
 
----
-
-# 30. Most Important Portfolio Features
-
-The highest-priority AI Engineering features are:
-
-```text
-1. Natural-language financial input
-
-2. Financial Copilot
-   └── controlled tool calling through the harness
-
-3. Custom lightweight AI Harness
-   ├── runtime
-   ├── tool registry
-   ├── executor
-   ├── context
-   ├── permissions
-   ├── retries
-   └── tracing
-
-4. Agent evaluation suite
-
-5. Spending Forecasting
-
-6. Anomaly Detection
-
-7. Automated Financial Insights
-
-8. What-if Simulation
+```bash
+uv run python -m intelligence.evaluation.small_evaluation
 ```
-
-These features should receive significantly more attention than optional application functionality.
-
----
-
-# 31. Portfolio Story
-
-The project should demonstrate more than:
-
-> "I connected an LLM to a React application."
 
-The intended technical story is:
+This command makes real Jev, local-model and web-search calls and writes `intelligence/evaluation/small_eval_results.json` after each case. That file is overwritten by the next run; archive results under another name before rerunning. The three checked-in baseline files are preserved separately. The judge sends the answer and tool evidence to Jev, so use synthetic data for reproduction.
 
-> I built an end-to-end personal-finance AI system combining deterministic analytics, statistical methods, machine-learning models and LLM agents. I implemented a lightweight agent harness responsible for controlled tool execution, context and state management, permissions, retries, tracing and evaluation. The system uses specialized components based on the nature of the problem rather than treating an LLM as the solution to every task.
+## Repository structure
 
-This distinction is important.
-
-The Financial Copilot is an **application agent**.
-
-The AI Harness is the **runtime and infrastructure used to execute the agent reliably**.
-
----
-
-# 32. Guiding Architecture
-
-The central application flow should remain:
-
-```text
-Natural-language input
-        ↓
-Structured extraction
-        ↓
-Validation
-        ↓
-Database
-        ↓
-Analytics / Statistics / ML
-        ↓
-Tools
-        ↓
-AI Harness
-        ↓
-Agent
-        ↓
-LLM interpretation
-        ↓
-Dashboard / Financial Copilot
-```
-
-For conversational queries:
-
 ```text
-User
- ↓
-Agent
- ↓
-Harness
- ↓
-LLM
- ↓
-Tool request
- ↓
-Harness validation
- ↓
-Tool
- ↓
-DB / Analytics / ML
- ↓
-Structured result
- ↓
-Harness
- ↓
-LLM
- ↓
-Final answer
+mamona-finance-tracker/
+├── backend/
+│   ├── app/
+│   │   ├── api/                  # FastAPI routers and demo identity
+│   │   ├── db/                   # Engine, demo seeds and dataset generator
+│   │   ├── models/               # SQLAlchemy tables
+│   │   ├── schemas/              # Pydantic input/output models
+│   │   ├── services/             # Business rules and database operations
+│   │   └── main.py
+│   └── migrations/               # Alembic migration history
+├── intelligence/
+│   ├── agents/                   # Copilot, user context and prompt
+│   ├── agent_tools/              # Database-service tools and web search
+│   ├── ai_tools/                 # Transaction extraction, router, response nodes
+│   ├── harness/                  # LangGraph workflow and memory
+│   ├── statistics/               # Deterministic financial calculations
+│   └── evaluation/               # Dataset, runner, archived results and analyses
+├── frontend/src/
+│   ├── app/                      # Pages, routes, layout and theme
+│   ├── components/               # Finance and Copilot UI
+│   ├── services/                 # API client functions
+│   ├── types/                    # TypeScript contracts
+│   ├── styles/                   # Shared styling
+│   └── utils/                    # Formatting helpers
+├── data/demo/                    # Synthetic CSV and expected dataset totals
+├── docs/assets/                  # Demo GIFs and overview still
+├── infrastructure/docker/        # Local PostgreSQL Compose setup
+├── tests/                        # Deterministic business-rule and seed tests
+├── .env.example
+├── alembic.ini
+├── pyproject.toml
+├── uv.lock
+└── README.md
 ```
-
-The LLM is not the source of financial truth.
-
-The database, deterministic calculations, statistical methods and ML models produce the authoritative or computational results.
 
-The harness controls interaction between the model and those systems.
+## Current limitations
 
-The agent decides how to solve the user's task.
+- **Demo identity:** the application uses a fixed demo user. Full authentication and production authorization are not implemented.
+- **Temporary, process-local memory:** `InMemorySaver` is not durable across backend restarts or shared between workers. Leaving the page clears browser state; it does not immediately delete backend checkpoints. Use a single backend worker for the local demo.
+- **External-evidence reliability:** the copilot can misinterpret release dates/status or make unsupported claims despite relevant search results. Known examples remain documented in the evaluation reports.
+- **Judge reliability:** Jev labels can miss contradictions. Manual findings are kept separate from the original ratings.
+- **Incomplete execution controls:** the graph limit is not a full request deadline, tool-call budget, retry policy or memory-retention policy. Cancelling a browser request does not guarantee cancellation of backend inference.
+- **Currency and Savings scope:** no FX conversion, bank synchronization or Savings withdrawal-entry flow.
+- **Future features:** forecasting, anomaly detection, recurring-payment automation, CSV import and persistent conversation history are not implemented, even where database tables were prepared in advance.
 
-The LLM acts primarily as:
+## Further development
 
-- a natural-language interface,
-- a reasoning layer,
-- a tool-selection mechanism,
-- an explanation layer.
+The next engineering work is broader evaluation with follow-up and failure scenarios, evidence-based judge explanations, automatic argument checks and measured response latency. Replayable web-search fixtures would help compare models and prompts against the same evidence.
 
----
-
-# 33. Final Design Principle
-
-The project should optimize for:
-
-```text
-correctness
-    >
-reliability
-    >
-observability
-    >
-measurability
-    >
-complexity
-```
+Persistent memory with retention controls, authentication and tighter execution budgets are later runtime improvements. These are future directions rather than claims about the current portfolio version.
 
-AI should not be added merely because it is possible.
+## Author and license
 
-The strongest version of this project is not the one with the largest number of agents or models.
+Built by **Szymon Adamczyk** as an AI engineering portfolio project.
 
-It is the version where every component has a clear responsibility, its behavior can be inspected and evaluated, and the complete system can be explained from user input to final output.
+Released under the [MIT License](LICENSE).

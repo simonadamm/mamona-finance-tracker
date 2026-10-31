@@ -2,7 +2,10 @@ STRUCTURE.md
 STACK.md
 NOTES.md
 todo_till_november.md
-.env
+.env*
+!.env.example
+.DS_Store
+*.log
 __pycache__/
 *.py[cod]
 .venv/

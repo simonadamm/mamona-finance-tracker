@@ -1,7 +1,7 @@
 [project]
 name = "mamona"
 version = "0.1.0"
-description = "Add your description here"
+description = "Monthly budget tracker with natural-language transaction input and an AI financial copilot."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -10,8 +10,6 @@ dependencies = [
     "langchain>=1.4.6",
     "langchain-ollama>=1.1.0",
     "langsmith>=0.14.9",
-    "opentelemetry-api>=1.45.1",
-    "opentelemetry-sdk>=1.45.1",
     "psycopg[binary]>=3.3.6",
     "pydantic>=2.13.5",
     "python-dotenv>=1.2.4",

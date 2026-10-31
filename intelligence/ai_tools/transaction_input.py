@@ -2,10 +2,9 @@
 from backend.app.schemas.inside.transactions_models import TransactionDraft
 
 # Typesafe SDK (Jev model)
-from typesafe_sdk import Choice, Noul, Score, TypeSafeClient
+from typesafe_sdk import Choice, Noul, TypeSafeClient
 
 # Langchain's libraries
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import ChatOllama
 from langsmith import traceable
 

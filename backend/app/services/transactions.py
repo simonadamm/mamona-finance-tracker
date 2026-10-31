@@ -10,24 +10,6 @@ from backend.app.schemas.inside.transactions_models import (
     TransactionRead,
     TransactionSearchResult,
 )
-# List of months
-MONTHS = {
-    "JANUARY": 1,
-    "FEBRUARY": 2,
-    "MARCH": 3,
-    "APRIL": 4,
-    "MAY": 5,
-    "JUNE": 6,
-    "JULY": 7,
-    "AUGUST": 8,
-    "SEPTEMBER": 9,
-    "OCTOBER": 10,
-    "NOVEMBER": 11,
-    "DECEMBER": 12,
-}
-# List of years (so far...)
-YEARS = [2025, 2026, 2027]
-
 # ==========================
 # UTILS Functions
 # ==========================
